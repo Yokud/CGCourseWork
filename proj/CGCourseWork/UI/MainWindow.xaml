@@ -12,7 +12,8 @@
             <ColumnDefinition Width="410*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <Border BorderThickness="2" 
+        <Border Name="Frame"
+                BorderThickness="2" 
                 BorderBrush="Black" 
                 Margin="0,5,5,5" 
                 VerticalAlignment="Center" 
@@ -26,11 +27,10 @@
                    MinHeight="400" 
                    MinWidth="480" 
                    Margin="0,0,0,0" 
-                   Stretch="Fill" 
-                   Source="/imgs/лягуха.png"/>
+                   Stretch="Fill"/>
         </Border>
 
-        <Grid Grid.Column="0" Margin="5,5,5,0">
+        <Grid Name="Menu" Grid.Column="0" Margin="5,5,5,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -42,14 +42,15 @@
                 <RowDefinition Height="0.215*"/>
             </Grid.RowDefinitions>
 
-            <GroupBox Header="Выбор карты высот" Margin="5" MinWidth="75" Grid.Column="0" Grid.Row="0">
+            <GroupBox Name="HeightmapMenu" Header="Выбор карты высот" Margin="5" MinWidth="75" Grid.Column="0" Grid.Row="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
 
-                    <Button Content="Сгенерировать карту высот" 
+                    <Button Name="Generate"
+                            Content="Сгенерировать карту высот" 
                             Margin="5,8,15,6" 
                             Grid.Row="0"
                             MinWidth="90" 
@@ -57,7 +58,8 @@
                             Height="auto" Width="auto"
                             Padding="5"/>
 
-                    <Button Content="Загрузить карту высот" 
+                    <Button Name="Load"
+                            Content="Загрузить карту высот" 
                             Margin="5,8,15,8" 
                             MinWidth="90" 
                             MinHeight="26" 
@@ -67,11 +69,11 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="Статус карты высот" Margin="5" Grid.Column="1" Grid.Row="0">
+            <GroupBox Name="Status" Header="Статус карты высот" Margin="5" Grid.Column="1" Grid.Row="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.7*"></RowDefinition>
-                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="0.3*"></RowDefinition>
                     </Grid.RowDefinitions>
 
                     <TextBox IsReadOnly="True" TextWrapping="WrapWithOverflow" Margin="5" Grid.Row="0">
@@ -81,7 +83,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="Изменение видимой части" Grid.Column="0" Margin="5" Grid.Row="1" IsEnabled="False">
+            <GroupBox Name="ChangeTerrainView" Header="Изменение видимой части" Grid.Column="0" Margin="5" Grid.Row="1" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -92,37 +94,37 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
-                        <Label Content="X:" Margin="2, 6, 0, 0" FontSize="12"/>
+                    <DockPanel Name="DeltaX" Grid.Row="0" Grid.Column="0">
+                        <Label Content="X:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
-                    </StackPanel>
+                    </DockPanel>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
-                        <Label Content="Y:" Margin="2, 6, 0, 0" FontSize="12"/>
+                    <DockPanel Name="DeltaY" Grid.Row="0" Grid.Column="1">
+                        <Label Content="Y:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
-                    </StackPanel>
+                    </DockPanel>
 
-                    <Button Content="Применить" Grid.Row="1" Grid.ColumnSpan="2" Margin="40, 2.5, 40, 2.5"/>
+                    <Button Name="ChangeAccept" Content="Применить" Grid.Row="1" Grid.ColumnSpan="2" Margin="40, 2.5, 40, 2.5"/>
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="Поворот" Grid.Column="1" Margin="5" Grid.Row="1" IsEnabled="False">
+            <GroupBox Name="RotateTerrainView" Header="Поворот" Grid.Column="1" Margin="5" Grid.Row="1" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
                         <RowDefinition Height="0.45*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="0">
-                        <Label Content="Угол (в градусах):" Margin="2, 6, 0, 0" FontSize="12"/>
+                    <DockPanel Name="DeltaAngle" Grid.Row="0">
+                        <Label Content="Угол (в градусах):" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
-                    </StackPanel>
+                    </DockPanel>
 
-                    <Button Content="Применить" Grid.Row="1" Margin="40, 2.5, 40, 2.5"/>
+                    <Button Name="RotateAccept" Content="Применить" Grid.Row="1" Margin="40, 2.5, 40, 2.5"/>
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="Масштабирование видимой части" Grid.Column="0" Margin="5" Grid.Row="2" Grid.ColumnSpan="2" IsEnabled="False">
+            <GroupBox Name="ScaleTerrainView" Header="Масштабирование видимой части" Grid.Column="0" Margin="5" Grid.Row="2" Grid.ColumnSpan="2" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -134,51 +136,43 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
-                        <Label Content="X:" Margin="2, 6, 0, 0" FontSize="12"/>
+                    <DockPanel Name="ScaleX" Grid.Row="0" Grid.Column="0">
+                        <Label Content="X:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
-                    </StackPanel>
+                    </DockPanel>
 
-                    <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1">
-                        <Label Content="Y:" Margin="2, 6, 0, 0" FontSize="12"/>
+                    <DockPanel Name="ScaleY" Grid.Row="0" Grid.Column="1">
+                        <Label Content="Y:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
-                    </StackPanel>
-                    
-                    <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2">
-                        <Label Content="Z:" Margin="2, 6, 0, 0" FontSize="12"/>
-                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
-                    </StackPanel>
+                    </DockPanel>
 
-                    <Button Content="Применить" Grid.Row="1" Grid.Column="1" Margin="10, 2.5, 10, 2.5"/>
+                    <DockPanel Name="ScaleZ" Grid.Row="0" Grid.Column="2">
+                        <Label Content="Z:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
+                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
+                    </DockPanel>
+
+                    <Button Name="ScaleAccept" Content="Применить" Grid.Row="1" Grid.Column="1" Margin="10, 2.5, 10, 2.5"/>
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="Масштабирование видимой части" Grid.Column="0" Margin="2.5" Grid.Row="3" Grid.ColumnSpan="2" IsEnabled="False">
+            <GroupBox Name="RotateLightSourse" Header="Поворот источника света" Grid.Column="0" Margin="2.5" Grid.Row="3" Grid.ColumnSpan="2" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.09*"/>
-                            <ColumnDefinition Width="0.91*"/>
-                        </Grid.ColumnDefinitions>
-                        
-                        <Label Content="Фи:" Margin="2, 0, 0, 0" FontSize="12" Grid.Column="0"/>
-                        <Slider Orientation="Horizontal" Margin="0, 3, 5, 0" Maximum="180" Ticks="180" TickFrequency="1" Grid.Column="1"/>
-                    </Grid>
+                    <DockPanel Name="RotateTheta" Grid.Row="0" VerticalAlignment="Center" Margin="2">
+                        <TextBox Text="{Binding ElementName=slValue1, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Label Content="  Зенит:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
+                        <Slider Name="slValue1" Orientation="Horizontal" Margin="0, 3, 5, 0" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </DockPanel>
 
-                    <Grid Grid.Row="1" Margin="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.09*"/>
-                            <ColumnDefinition Width="0.91*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Label Content="Пси:" Margin="2, 0, 0, 0" FontSize="12" Grid.Column="0"/>
-                        <Slider Orientation="Horizontal" Margin="0, 3, 5, 1" Maximum="180" Ticks="180" TickFrequency="1" Grid.Column="1"/>
-                    </Grid>
+                    <DockPanel Name="RotatePhi" Grid.Row="1" VerticalAlignment="Center" Margin="2">
+                        <Label Content="Азимут:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
+                        <TextBox Text="{Binding ElementName=slValue2, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider Name="slValue2" Orientation="Horizontal" Margin="0, 3, 5, 0" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </DockPanel>
                 </Grid>
             </GroupBox>
 
