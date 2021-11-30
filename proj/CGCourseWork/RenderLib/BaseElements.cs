@@ -7,13 +7,29 @@ using System.Numerics;
 
 namespace RenderLib
 {
-    public enum Axis { X, Y, Z}
-
+    /// <summary>
+    /// Класс вершины
+    /// </summary>
     public class Vertex
     {
+        /// <summary>
+        /// Позиция вершины в мировой системе координат
+        /// </summary>
         public Vector3 Position { get; set; }
+
+        /// <summary>
+        /// Текстурные координаты
+        /// </summary>
         public Vector2 TextureCoords { get; set; }
+
+        /// <summary>
+        /// Нормаль вершины
+        /// </summary>
         public Vector3 Normal { get; set; }
+
+        /// <summary>
+        /// Смежные грани
+        /// </summary>
         public List<int> AdjacentPolygons { get; set; }
 
         public Vertex(float x, float y, float z)
@@ -33,69 +49,81 @@ namespace RenderLib
             Normal = norm;
         }
 
+        /// <summary>
+        /// Перемещение вершины относительно начала координат
+        /// </summary>
+        /// <param name="dx">Величина перемещения по оси OX</param>
+        /// <param name="dy">Величина перемещения по оси OY</param>
+        /// <param name="dz">Величина перемещения по оси OZ</param>
         public void Move(float dx, float dy, float dz)
         {
-            Position += new Vector3(dx, dy, dz);
+            Position.Move(dx, dy, dz);
         }
 
+        /// <summary>
+        /// Масштабирование вершины относительно начала координат
+        /// </summary>
+        /// <param name="kx">Коэффициент масштабирования по оси OX</param>
+        /// <param name="ky">Коэффициент масштабирования по оси OY</param>
+        /// <param name="kz">Коэффициент масштабирования по оси OZ</param>
         public void Scale(float kx, float ky, float kz)
         {
-            var v = new Vector4(Position.X, Position.Y, Position.Z, 1);
             var matr = new Matrix4x4() { M11 = kx, M22 = ky, M33 = kz, M44 = 1 };
-
-            var new_v = Vector4.Transform(v, matr);
-
-            Position = new Vector3(new_v.X / new_v.W, new_v.Y / new_v.W, new_v.Z / new_v.W);
+            Position.Transform(matr);
         }
 
+        /// <summary>
+        /// Поворот вершины относительно начала координат
+        /// </summary>
+        /// <param name="angle">Угол поворота</param>
+        /// <param name="axis">Ось вращения</param>
         public void Rotate(float angle, Axis axis)
         {
-            var rotation = axis == Axis.X ? Matrix4x4.CreateRotationX(angle) : axis == Axis.Y ? Matrix4x4.CreateRotationY(angle) : Matrix4x4.CreateRotationZ(angle);
-            Position = Vector3.Transform(Position, rotation);
+            Position.Rotate(angle, axis);
         }
     }
 
+    /// <summary>
+    /// Класс грани
+    /// </summary>
     public class Polygon
     {
+        /// <summary>
+        /// Номера вершин грани
+        /// </summary>
         public int[] Vertices { get; set; }
-        public Vector3 Normal { get; private set; }
 
-        public Polygon(int v1, int v2, int v3, List<Vertex> verts = null)
+        public Polygon(int v1, int v2, int v3)
         {
             Vertices = new int[3] { v1, v2, v3 };
-
-            if (verts != null)
-            {
-                CalcNormal(verts);
-            }
-        }
-
-        public Vector3 CalcNormal(List<Vertex> verts)
-        {
-            Vector3 a = verts[Vertices[2]].Position - verts[Vertices[0]].Position;
-            Vector3 b = verts[Vertices[1]].Position - verts[Vertices[0]].Position;
-
-            Normal = Vector3.Normalize(Vector3.Cross(a, b));
-
-            return Normal;
         }
     }
 
+    /// <summary>
+    /// Класс локальной системы координат (ЛСК)
+    /// </summary>
     public class Pivot
     {
         /// <summary>
-        /// Pivot position in world coord system
+        /// Центр ЛСК в мировой системе координат (МСК)
         /// </summary>
         public Vector3 Center { get; private set; }
+
         /// <summary>
-        /// must be length equal one
+        /// Ось OX
         /// </summary>
         public Vector3 XAxis { get; set; }
-        public Vector3 YAxis { get; set; }
-        public Vector3 ZAxis { get; set; }
         /// <summary>
-        /// Proections to local ort 
-        /// Orts must be length equal one
+        /// Ось OY
+        /// </summary>
+        public Vector3 YAxis { get; set; }
+        /// <summary>
+        /// Ось OZ
+        /// </summary>
+        public Vector3 ZAxis { get; set; }
+
+        /// <summary>
+        /// Матрица перевода в ЛСК
         /// </summary>
         public Matrix4x4 LocalCoordsMatrix => new Matrix4x4
             (
@@ -105,7 +133,7 @@ namespace RenderLib
                 0, 0, 0, 1
             );
         /// <summary>
-        /// Invert tranform to world coords system
+        /// Матрица перевода в МСК
         /// </summary>
         public Matrix4x4 GlobalCoordsMatrix => new Matrix4x4
             (
@@ -114,6 +142,14 @@ namespace RenderLib
                 ZAxis.X, ZAxis.Y, ZAxis.Z, 0,
                 0, 0, 0, 1
             );
+
+        /// <summary>
+        /// Длина векторов базиса должна быть равна 1
+        /// </summary>
+        /// <param name="center"></param>
+        /// <param name="xaxis"></param>
+        /// <param name="yaxis"></param>
+        /// <param name="zaxis"></param>
         public Pivot(Vector3 center, Vector3 xaxis, Vector3 yaxis, Vector3 zaxis)
         {
             Center = center;
@@ -121,51 +157,124 @@ namespace RenderLib
             YAxis = yaxis;
             ZAxis = zaxis;
         }
+
+        /// <summary>
+        /// ЛСК со стандартным отронормированным базисом
+        /// </summary>
+        /// <param name="center">Положение в МСК</param>
+        /// <returns></returns>
         public static Pivot BasePivot(Vector3 center) => new Pivot(center, new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1));
 
-        public void Move(Vector3 v)
+        /// <summary>
+        /// Перемещение ЛСК относительно начала координат
+        /// </summary>
+        /// <param name="dx">Величина перемещения по оси OX</param>
+        /// <param name="dy">Величина перемещения по оси OY</param>
+        /// <param name="dz">Величина перемещения по оси OZ</param>
+        public void Move(float dx, float dy, float dz)
         {
-            Center += v;
+            Center.Move(dx, dy, dz);
         }
 
+        /// <summary>
+        /// Поворот ЛСК относительно начала координат
+        /// </summary>
+        /// <param name="angle">Угол поворота</param>
+        /// <param name="axis">Ось вращения</param>
         public void Rotate(float angle, Axis axis)
         {
-            XAxis = XAxis.Rotate(angle, axis);
-            YAxis = YAxis.Rotate(angle, axis);
-            ZAxis = ZAxis.Rotate(angle, axis);
+            XAxis.Rotate(angle, axis);
+            YAxis.Rotate(angle, axis);
+            ZAxis.Rotate(angle, axis);
         }
+
+        /// <summary>
+        /// Поворот ЛСК относительно точки
+        /// </summary>
+        /// <param name="point">Точка поворота</param>
+        /// <param name="angle">Угол поворота</param>
+        /// <param name="axis">Ось поворота</param>
         public void RotateAt(Vector3 point, float angle, Axis axis)
         {
-            //creating basis with center in point
-            var rotationBasis = Pivot.BasePivot(point);
-            //transforming to basis coords 4 points : , Center , Center + XAxis , Center + YAxis , Center + ZAxis
+            // Создание базиса в точке поворота
+            var rotationBasis = BasePivot(point);
+
+            // Перевод ЛСК в ЛСК точки поворота
             var center = Center - point;
             var xaxis = center + XAxis;
             var yaxis = center + YAxis;
             var zaxis = center + ZAxis;
-            //rotating this points in local basis and tranforming to global
-            var newCenter = rotationBasis.ToGlobalCoords(center.Rotate(angle, axis));
-            var newx = rotationBasis.ToGlobalCoords(xaxis.Rotate(angle, axis));
-            var newy = rotationBasis.ToGlobalCoords(yaxis.Rotate(angle, axis));
-            var newz = rotationBasis.ToGlobalCoords(zaxis.Rotate(angle, axis));
-            //creating new basis from this points
+
+            // Поворот в ЛСК точки поворота
+            center.Rotate(angle, axis);
+            xaxis.Rotate(angle, axis);
+            yaxis.Rotate(angle, axis);
+            zaxis.Rotate(angle, axis);
+
+            // Перевод в МСК
+            var newCenter = rotationBasis.ToGlobalCoords(center);
+            var newx = rotationBasis.ToGlobalCoords(xaxis);
+            var newy = rotationBasis.ToGlobalCoords(yaxis);
+            var newz = rotationBasis.ToGlobalCoords(zaxis);
+
+            // Получение новой ЛКС
             Center = newCenter;
             XAxis = newx - Center;
             YAxis = newy - Center;
             ZAxis = newz - Center;
         }
+
+        /// <summary>
+        /// Перевод в МСК
+        /// </summary>
+        /// <param name="local">Точка в ЛСК</param>
+        /// <returns></returns>
         public Vector3 ToGlobalCoords(Vector3 local)
         {
             return Vector3.Transform(local, GlobalCoordsMatrix) + Center;
         }
+
+        /// <summary>
+        /// Перевод в ЛСК
+        /// </summary>
+        /// <param name="global">Точка в МСК</param>
+        /// <returns></returns>
         public Vector3 ToLocalCoords(Vector3 global)
         {
             return Vector3.Transform(global - Center, LocalCoordsMatrix);
         }
     }
 
+    /// <summary>
+    /// Абстрактный класс трёхмерного объекта
+    /// </summary>
     public abstract class Object3D
     {
+        public delegate void RotateHandler(float angle, Axis axis);
+        public delegate void MoveHandler(float dx, float dy, float dz);
+        public delegate void ScaleHandler(float kx, float ky, float kz);
 
+        public event RotateHandler OnRotate;
+        public event MoveHandler OnMove;
+        public event ScaleHandler OnScale;
+
+        public Pivot Pivot { get; protected set; }
+
+        public abstract void Move(float dx, float dy, float dz);
+        public abstract void Rotate(float angle, Axis axis);
+        public abstract void Scale(float kx, float ky, float kz);
+
+        protected void OnRotateEvent(float angle, Axis axis)
+        {
+            OnRotate?.Invoke(angle, axis);
+        }
+        protected void OnMoveEvent(float dx, float dy, float dz)
+        {
+            OnMove?.Invoke(dx, dy, dz);
+        }
+        protected void OnScaleEvent(float kx, float ky, float kz)
+        {
+            OnScale?.Invoke(kx, ky, kz);
+        }
     }
 }
