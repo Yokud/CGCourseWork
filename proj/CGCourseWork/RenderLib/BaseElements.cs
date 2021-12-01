@@ -197,13 +197,13 @@ namespace RenderLib
         public void RotateAt(Vector3 point, float angle, Axis axis)
         {
             // Создание базиса в точке поворота
-            var rotationBasis = BasePivot(point);
+            Pivot rotationBasis = BasePivot(point);
 
             // Перевод ЛСК в ЛСК точки поворота
-            var center = Center - point;
-            var xaxis = center + XAxis;
-            var yaxis = center + YAxis;
-            var zaxis = center + ZAxis;
+            Vector3 center = Center - point;
+            Vector3 xaxis = center + XAxis;
+            Vector3 yaxis = center + YAxis;
+            Vector3 zaxis = center + ZAxis;
 
             // Поворот в ЛСК точки поворота
             center.Rotate(angle, axis);
@@ -212,10 +212,10 @@ namespace RenderLib
             zaxis.Rotate(angle, axis);
 
             // Перевод в МСК
-            var newCenter = rotationBasis.ToGlobalCoords(center);
-            var newx = rotationBasis.ToGlobalCoords(xaxis);
-            var newy = rotationBasis.ToGlobalCoords(yaxis);
-            var newz = rotationBasis.ToGlobalCoords(zaxis);
+            Vector3 newCenter = rotationBasis.ToGlobalCoords(center);
+            Vector3 newx = rotationBasis.ToGlobalCoords(xaxis);
+            Vector3 newy = rotationBasis.ToGlobalCoords(yaxis);
+            Vector3 newz = rotationBasis.ToGlobalCoords(zaxis);
 
             // Получение новой ЛКС
             Center = newCenter;

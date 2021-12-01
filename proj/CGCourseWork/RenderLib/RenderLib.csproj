@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -43,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseElements.cs" />
+    <Compile Include="Textures.cs" />
     <Compile Include="PolModel.cs" />
     <Compile Include="MathAddon.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

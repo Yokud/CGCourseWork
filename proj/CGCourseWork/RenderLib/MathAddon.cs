@@ -31,7 +31,7 @@ namespace RenderLib
         /// <param name="axis">Ось поворота</param>
         public static void Rotate(this Vector3 v, float angle, Axis axis)
         {
-            var rotation = axis == Axis.X ? Matrix4x4.CreateRotationX(angle) : axis == Axis.Y ? Matrix4x4.CreateRotationY(angle) : Matrix4x4.CreateRotationZ(angle);
+            Matrix4x4 rotation = axis == Axis.X ? Matrix4x4.CreateRotationX(angle) : axis == Axis.Y ? Matrix4x4.CreateRotationY(angle) : Matrix4x4.CreateRotationZ(angle);
             v.Transform(rotation);
         }
 
@@ -65,8 +65,8 @@ namespace RenderLib
         /// <param name="matrix4X4">Матрица преобразования</param>
         public static void Transform(this Vector3 v, Matrix4x4 matrix4X4)
         {
-            var v4 = v.ToVec4();
-            var new_v = Vector4.Transform(v, matrix4X4);
+            Vector4 v4 = v.ToVec4();
+            Vector4 new_v = Vector4.Transform(v, matrix4X4);
             v = new_v.FromVec4();
         }
 
