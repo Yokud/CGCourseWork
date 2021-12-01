@@ -48,5 +48,10 @@ namespace RenderLib
         {
             Pivot.RotateAt(p, angle, axis);
         }
+
+        public Vector2 ScreenProjection(Vector3 p)
+        {
+
+        }
     }
 }
