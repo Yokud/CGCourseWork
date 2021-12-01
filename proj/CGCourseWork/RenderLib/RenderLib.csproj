@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseElements.cs" />
+    <Compile Include="Camera.cs" />
     <Compile Include="Textures.cs" />
     <Compile Include="PolModel.cs" />
     <Compile Include="MathAddon.cs" />

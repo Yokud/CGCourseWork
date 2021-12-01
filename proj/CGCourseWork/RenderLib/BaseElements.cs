@@ -68,7 +68,7 @@ namespace RenderLib
         /// <param name="kz">Коэффициент масштабирования по оси OZ</param>
         public void Scale(float kx, float ky, float kz)
         {
-            var matr = new Matrix4x4() { M11 = kx, M22 = ky, M33 = kz, M44 = 1 };
+            Matrix4x4 matr = new Matrix4x4() { M11 = kx, M22 = ky, M33 = kz, M44 = 1 };
             Position.Transform(matr);
         }
 
@@ -222,6 +222,12 @@ namespace RenderLib
             XAxis = newx - Center;
             YAxis = newy - Center;
             ZAxis = newz - Center;
+        }
+
+        public void Scale(float kx, float ky, float kz)
+        {
+            Matrix4x4 matr = new Matrix4x4() { M11 = kx, M22 = ky, M33 = kz, M44 = 1 };
+            Center.Transform(matr);
         }
 
         /// <summary>

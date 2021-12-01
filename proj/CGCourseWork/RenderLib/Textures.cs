@@ -21,7 +21,7 @@ namespace RenderLib
 
         public static FastBitmap FromBitmap(Bitmap bitmap)
         {
-            var fastBitmap = new FastBitmap(bitmap.Width, bitmap.Height);
+            FastBitmap fastBitmap = new FastBitmap(bitmap.Width, bitmap.Height);
             for (int i = 0; i < bitmap.Width; i++)
             {
                 for (int g = 0; g < bitmap.Height; g++)
@@ -62,7 +62,7 @@ namespace RenderLib
         public Color GetPixel(int x, int y)
         {
             int index = x + (y * Width);
-            var color = Color.FromArgb(Bits[index]);
+            Color color = Color.FromArgb(Bits[index]);
             return color;
         }
 
@@ -82,8 +82,16 @@ namespace RenderLib
             Texels = FastBitmap.FromBitmap((Bitmap)Image.FromFile(filepath));
         }
 
+        public Texture(Bitmap bmp)
+        {
+            Texels = FastBitmap.FromBitmap(bmp);
+        }
+
         public Color GetTexel(float u, float v)
         {
+            if (u < 0 || v < 0 || u > 1 || v > 1)
+                throw new Exception("Invalid values of u or v!");
+
             int x_texel = (int)Math.Floor(Texels.Width * u);
             int y_texel = (int)Math.Floor(Texels.Height * v);
 
@@ -102,7 +110,9 @@ namespace RenderLib
 
         public int GetMipLevel(int x_min, int x_max, int y_min, int y_max)
         {
-            return MipLevels.Count - (int)Math.Ceiling(Math.Log((x_max - x_min) * (y_max - y_min), 4));
+            int result = MipLevels.Count - (int)Math.Ceiling(Math.Log((x_max - x_min) * (y_max - y_min), 4));
+
+            return result < 0 ? 0 : result;
         }
     }
 }
