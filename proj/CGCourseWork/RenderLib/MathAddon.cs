@@ -29,10 +29,10 @@ namespace RenderLib
         /// <param name="v"></param>
         /// <param name="angle">Угол поворота</param>
         /// <param name="axis">Ось поворота</param>
-        public static void Rotate(this Vector3 v, float angle, Axis axis)
+        public static Vector3 Rotate(this Vector3 v, float angle, Axis axis)
         {
             Matrix4x4 rotation = axis == Axis.X ? Matrix4x4.CreateRotationX(angle) : axis == Axis.Y ? Matrix4x4.CreateRotationY(angle) : Matrix4x4.CreateRotationZ(angle);
-            v.Transform(rotation);
+            return v.Transform(rotation);
         }
 
         /// <summary>
@@ -53,9 +53,9 @@ namespace RenderLib
         /// <param name="dx"></param>
         /// <param name="dy"></param>
         /// <param name="dz"></param>
-        public static void Move(this Vector3 v, float dx, float dy, float dz)
+        public static Vector3 Move(this Vector3 v, float dx, float dy, float dz)
         {
-            v += new Vector3(dx, dy, dz);
+            return v + new Vector3(dx, dy, dz);
         }
 
         /// <summary>
@@ -63,11 +63,11 @@ namespace RenderLib
         /// </summary>
         /// <param name="v"></param>
         /// <param name="matrix4X4">Матрица преобразования</param>
-        public static void Transform(this Vector3 v, Matrix4x4 matrix4X4)
+        public static Vector3 Transform(this Vector3 v, Matrix4x4 matrix4X4)
         {
             Vector4 v4 = v.ToVec4();
             Vector4 new_v = Vector4.Transform(v, matrix4X4);
-            v = new_v.FromVec4();
+            return new_v.FromVec4();
         }
 
         /// <summary>
@@ -89,6 +89,16 @@ namespace RenderLib
         public static Vector3 FromVec4(this Vector4 v)
         {
             return new Vector3(v.X / v.W, v.Y / v.W, v.Z / v.W);
+        }
+
+        public static int Lepr(int min, int max, float amount)
+        {
+            return SystemAddon.RoundToInt(min + (max - min) * amount);
+        }
+
+        public static float Lepr(float min, float max, float amount)
+        {
+            return min + (max - min) * amount;
         }
     }
 }

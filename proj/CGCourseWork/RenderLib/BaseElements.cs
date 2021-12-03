@@ -40,6 +40,16 @@ namespace RenderLib
         public Vertex(Vector3 pos)
         {
             Position = pos;
+
+            AdjacentPolygons = new List<int>();
+        }
+
+        public Vertex(Vector3 pos, Vector2 texcoords)
+        {
+            Position = pos;
+            TextureCoords = texcoords;
+
+            AdjacentPolygons = new List<int>();
         }
 
         public Vertex(Vector3 pos, Vector2 texcoords, Vector3 norm)
@@ -47,6 +57,8 @@ namespace RenderLib
             Position = pos;
             TextureCoords = texcoords;
             Normal = norm;
+
+            AdjacentPolygons = new List<int>();
         }
 
         /// <summary>
@@ -57,7 +69,7 @@ namespace RenderLib
         /// <param name="dz">Величина перемещения по оси OZ</param>
         public void Move(float dx, float dy, float dz)
         {
-            Position.Move(dx, dy, dz);
+            Position = Position.Move(dx, dy, dz);
         }
 
         /// <summary>
@@ -69,7 +81,7 @@ namespace RenderLib
         public void Scale(float kx, float ky, float kz)
         {
             Matrix4x4 matr = new Matrix4x4() { M11 = kx, M22 = ky, M33 = kz, M44 = 1 };
-            Position.Transform(matr);
+            Position = Position.Transform(matr);
         }
 
         /// <summary>
@@ -79,7 +91,16 @@ namespace RenderLib
         /// <param name="axis">Ось вращения</param>
         public void Rotate(float angle, Axis axis)
         {
-            Position.Rotate(angle, axis);
+            Position = Position.Rotate(angle, axis);
+        }
+
+        /// <summary>
+        /// Преобразование вершины по заданной матрице
+        /// </summary>
+        /// <param name="matr">Матрица преобразования</param>
+        public void Transform(Matrix4x4 matr)
+        {
+            Position = Position.Transform(matr);
         }
     }
 
@@ -96,6 +117,12 @@ namespace RenderLib
         public Polygon(int v1, int v2, int v3)
         {
             Vertices = new int[3] { v1, v2, v3 };
+        }
+
+        public int this[int index]
+        {
+            get { return Vertices[index]; }
+            set { Vertices[index] = value; }
         }
     }
 
@@ -159,11 +186,12 @@ namespace RenderLib
         }
 
         /// <summary>
-        /// ЛСК со стандартным отронормированным базисом
+        /// ЛСК со стандартным ортонормированным базисом
         /// </summary>
         /// <param name="center">Положение в МСК</param>
         /// <returns></returns>
         public static Pivot BasePivot(Vector3 center) => new Pivot(center, new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1));
+        public static Pivot BasePivot(float x, float y, float z) => BasePivot(new Vector3(x, y, z));
 
         /// <summary>
         /// Перемещение ЛСК относительно начала координат
@@ -173,7 +201,7 @@ namespace RenderLib
         /// <param name="dz">Величина перемещения по оси OZ</param>
         public void Move(float dx, float dy, float dz)
         {
-            Center.Move(dx, dy, dz);
+            Center = Center.Move(dx, dy, dz);
         }
 
         /// <summary>
@@ -183,9 +211,9 @@ namespace RenderLib
         /// <param name="axis">Ось вращения</param>
         public void Rotate(float angle, Axis axis)
         {
-            XAxis.Rotate(angle, axis);
-            YAxis.Rotate(angle, axis);
-            ZAxis.Rotate(angle, axis);
+            XAxis = XAxis.Rotate(angle, axis);
+            YAxis = YAxis.Rotate(angle, axis);
+            ZAxis = ZAxis.Rotate(angle, axis);
         }
 
         /// <summary>
@@ -206,10 +234,10 @@ namespace RenderLib
             Vector3 zaxis = center + ZAxis;
 
             // Поворот в ЛСК точки поворота
-            center.Rotate(angle, axis);
-            xaxis.Rotate(angle, axis);
-            yaxis.Rotate(angle, axis);
-            zaxis.Rotate(angle, axis);
+            center = center.Rotate(angle, axis);
+            xaxis = xaxis.Rotate(angle, axis);
+            yaxis = yaxis.Rotate(angle, axis);
+            zaxis = zaxis.Rotate(angle, axis);
 
             // Перевод в МСК
             Vector3 newCenter = rotationBasis.ToGlobalCoords(center);
@@ -227,7 +255,7 @@ namespace RenderLib
         public void Scale(float kx, float ky, float kz)
         {
             Matrix4x4 matr = new Matrix4x4() { M11 = kx, M22 = ky, M33 = kz, M44 = 1 };
-            Center.Transform(matr);
+            Center = Center.Transform(matr);
         }
 
         /// <summary>

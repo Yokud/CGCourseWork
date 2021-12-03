@@ -12,7 +12,7 @@
             <ColumnDefinition Width="410*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <Border Name="Frame"
+        <Border Name="Border"
                 BorderThickness="2" 
                 BorderBrush="Black" 
                 Margin="0,5,5,5" 
@@ -22,7 +22,8 @@
                 Grid.Column="1" 
                 MinHeight="400" 
                 MinWidth="390">
-            <Image HorizontalAlignment="Left" 
+            <Image Name="MainFrame"
+                   HorizontalAlignment="Left" 
                    VerticalAlignment="Top" 
                    MinHeight="400" 
                    MinWidth="480" 

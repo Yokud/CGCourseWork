@@ -73,7 +73,7 @@ namespace RenderLib
         }
     }
 
-    class Texture
+    public class Texture
     {
         public FastBitmap Texels { get; private set; }
 
@@ -89,17 +89,24 @@ namespace RenderLib
 
         public Color GetTexel(float u, float v)
         {
-            if (u < 0 || v < 0 || u > 1 || v > 1)
-                throw new Exception("Invalid values of u or v!");
+            if (u < 0)
+                u = 0;
+            else if (u > 1)
+                u = 1;
 
-            int x_texel = (int)Math.Floor(Texels.Width * u);
-            int y_texel = (int)Math.Floor(Texels.Height * v);
+            if (v < 0)
+                v = 0;
+            else if (v > 1)
+                v = 1;
+
+            int x_texel = Math.Min((int)Math.Floor(Texels.Width * u), Texels.Width - 1);
+            int y_texel = Math.Min((int)Math.Floor(Texels.Height * v), Texels.Height - 1);
 
             return Texels.GetPixel(x_texel, y_texel);
         }
     }
 
-    class MipMap
+    public class MipMap
     {
         public List<Texture> MipLevels { get; protected set; }
 
