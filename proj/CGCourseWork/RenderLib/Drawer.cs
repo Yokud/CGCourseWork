@@ -61,11 +61,11 @@ namespace RenderLib
                 Vector3 second = cam.ScreenProjection(model.Vertices[model.Polygons[i][1]].Position);
                 Vector3 third = cam.ScreenProjection(model.Vertices[model.Polygons[i][2]].Position);
 
-                float u1 = SystemAddon.Min3(model.Vertices[model.Polygons[i][0]].TextureCoords.X, model.Vertices[model.Polygons[i][1]].TextureCoords.X, model.Vertices[model.Polygons[i][2]].TextureCoords.X);
-                float u2 = SystemAddon.Max3(model.Vertices[model.Polygons[i][0]].TextureCoords.X, model.Vertices[model.Polygons[i][1]].TextureCoords.X, model.Vertices[model.Polygons[i][2]].TextureCoords.X);
+                float u1 = MathAddon.Min3(model.Vertices[model.Polygons[i][0]].TextureCoords.X, model.Vertices[model.Polygons[i][1]].TextureCoords.X, model.Vertices[model.Polygons[i][2]].TextureCoords.X);
+                float u2 = MathAddon.Max3(model.Vertices[model.Polygons[i][0]].TextureCoords.X, model.Vertices[model.Polygons[i][1]].TextureCoords.X, model.Vertices[model.Polygons[i][2]].TextureCoords.X);
 
-                float v1 = SystemAddon.Min3(model.Vertices[model.Polygons[i][0]].TextureCoords.Y, model.Vertices[model.Polygons[i][1]].TextureCoords.Y, model.Vertices[model.Polygons[i][2]].TextureCoords.Y);
-                float v2 = SystemAddon.Max3(model.Vertices[model.Polygons[i][0]].TextureCoords.Y, model.Vertices[model.Polygons[i][1]].TextureCoords.Y, model.Vertices[model.Polygons[i][2]].TextureCoords.Y);
+                float v1 = MathAddon.Min3(model.Vertices[model.Polygons[i][0]].TextureCoords.Y, model.Vertices[model.Polygons[i][1]].TextureCoords.Y, model.Vertices[model.Polygons[i][2]].TextureCoords.Y);
+                float v2 = MathAddon.Max3(model.Vertices[model.Polygons[i][0]].TextureCoords.Y, model.Vertices[model.Polygons[i][1]].TextureCoords.Y, model.Vertices[model.Polygons[i][2]].TextureCoords.Y);
 
                 if (first.Y > second.Y)
                     SystemAddon.Swap(ref first, ref second);
@@ -86,24 +86,24 @@ namespace RenderLib
                 float c = (second.X - first.X) * (third.Y - first.Y) - (second.Y - first.Y) * (third.X - first.X);
                 float d = -(a * first.X + b * first.Y + c * first.Z);
 
-                for (int yi = Math.Max(0, SystemAddon.RoundToInt(min_y)); yi <= Math.Min(max_y, height - 1); yi++)
+                for (int yi = Math.Max(0, MathAddon.RoundToInt(min_y)); yi <= Math.Min(max_y, height - 1); yi++)
                 {
-                    int x1 = SystemAddon.RoundToInt(MathAddon.Lepr(min_x, max_x, (yi - min_y) / (max_y - min_y)));
+                    int x1 = MathAddon.RoundToInt(MathAddon.Lepr(min_x, max_x, (yi - min_y) / (max_y - min_y)));
                     int x2;
 
                     if (yi >= second.Y)
                     {
                         if (third.Y - second.Y != 0)
-                            x2 = SystemAddon.RoundToInt(MathAddon.Lepr(second.X, third.X, (yi - second.Y) / (third.Y - second.Y)));
+                            x2 = MathAddon.RoundToInt(MathAddon.Lepr(second.X, third.X, (yi - second.Y) / (third.Y - second.Y)));
                         else
-                            x2 = SystemAddon.RoundToInt(Math.Max(third.X, second.X));
+                            x2 = MathAddon.RoundToInt(Math.Max(third.X, second.X));
                     }
                     else
                     {
                         if (second.Y - first.Y != 0)
-                            x2 = SystemAddon.RoundToInt(MathAddon.Lepr(first.X, second.X, (yi - first.Y) / (second.Y - first.Y)));
+                            x2 = MathAddon.RoundToInt(MathAddon.Lepr(first.X, second.X, (yi - first.Y) / (second.Y - first.Y)));
                         else
-                            x2 = SystemAddon.RoundToInt(Math.Max(second.X, first.X));
+                            x2 = MathAddon.RoundToInt(Math.Max(second.X, first.X));
                     }
 
                     if (x1 > x2)
@@ -117,7 +117,7 @@ namespace RenderLib
                         {
                             DepthBuffer[xi, yi] = zi;
 
-                            float u = MathAddon.Lepr(u1, u2, (xi - SystemAddon.Min3(first.X, second.X, third.X)) / (SystemAddon.Max3(first.X, second.X, third.X) - SystemAddon.Min3(first.X, second.X, third.X)));
+                            float u = MathAddon.Lepr(u1, u2, ((float)xi - MathAddon.Min3(first.X, second.X, third.X)) / (MathAddon.Max3(first.X, second.X, third.X) - MathAddon.Min3(first.X, second.X, third.X)));
                             float v = MathAddon.Lepr(v1, v2, (yi - min_y) / (max_y - min_y));
 
                             texel = model.Texture.GetTexel(u, v);
