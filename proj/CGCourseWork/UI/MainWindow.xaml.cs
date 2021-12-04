@@ -61,10 +61,10 @@ namespace UI
                 };
 
             PolModel model = new PolModel(Vertices, Indexes, new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\UI\imgs\test.png"), Pivot.BasePivot(center));
-            model.Rotate((float)Math.PI / 4, Axis.Y);
+            //model.Rotate((float)Math.PI, Axis.X);
 
             Camera cam = new Camera(Pivot.BasePivot(0, 0, 150f), 400, 480, 10, 100);
-            cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
+            //cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
 
             Scene scene = new Scene(model, cam);
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
