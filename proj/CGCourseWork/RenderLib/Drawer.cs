@@ -112,8 +112,8 @@ namespace RenderLib
                     float zi = -(a * x1 + b * yi + d) / c;
                     float z_start = zi, z_end = zi + -a / c * (x2 - x1 + 1);
 
-                    float u1 = MathAddon.Lepr(min_u, max_u, (x1 - min_x) / (max_x - min_x));
-                    float u2 = MathAddon.Lepr(min_u, max_u, (x2 - min_x) / (max_x - min_x));
+                    float u1 = MathAddon.Lepr(min_u, max_u, (x1 - MathAddon.Min3(first.X, second.X, third.X)) / (MathAddon.Max3(first.X, second.X, third.X) - MathAddon.Min3(first.X, second.X, third.X)));
+                    float u2 = MathAddon.Lepr(min_u, max_u, (x2 - MathAddon.Min3(first.X, second.X, third.X)) / (MathAddon.Max3(first.X, second.X, third.X) - MathAddon.Min3(first.X, second.X, third.X)));
 
                     float v1 = MathAddon.Lepr(min_v, max_v, (yi - min_y) / (max_y - min_y));
 
@@ -123,8 +123,8 @@ namespace RenderLib
                         {
                             DepthBuffer[xi, yi] = zi;
 
-                            float u = x2 - x1 != 0 ? MathAddon.Lepr(u1 / zi, u2 / zi, ((float)xi - x1) / (x2 - x1)) : u1 / zi;
-                            float v = MathAddon.Lepr(min_v / zi, max_v / zi, (yi - min_y) / (max_y - min_y));
+                            float u = x2 - x1 != 0 ? MathAddon.Lepr(u1 / z_start, u2 / z_end, ((float)xi - x1) / (x2 - x1)) : u1 / z_start;
+                            float v = MathAddon.Lepr(v1 / z_start, v1 / z_end, (yi - min_y) / (max_y - min_y));
 
                             u /= 1 / zi;
                             v /= 1 / zi;
