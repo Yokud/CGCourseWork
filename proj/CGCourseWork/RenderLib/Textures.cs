@@ -89,15 +89,11 @@ namespace RenderLib
 
         public Color GetTexel(float u, float v)
         {
-            if (u < 0)
-                u = 0;
-            else if (u > 1)
-                u = 1;
+            if (u < 0 || u > 1)
+                u -= (float)Math.Floor(u);
 
-            if (v < 0)
-                v = 0;
-            else if (v > 1)
-                v = 1;
+            if (v < 0 || v > 1)
+                v -= (float)Math.Floor(v);
 
             int x_texel = Math.Min((int)Math.Floor(Texels.Width * u), Texels.Width - 1);
             int y_texel = Math.Min((int)Math.Floor(Texels.Height * v), Texels.Height - 1);

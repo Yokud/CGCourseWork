@@ -34,37 +34,23 @@ namespace UI
             var d = sideLen / 2;
             List<Vertex> Vertices = new List<Vertex>()
                 {
-                    new Vertex(new Vector3(center.X - d , center.Y - d, center.Z - d), new Vector2(1, 0)) ,
-                    new Vertex(new Vector3(center.X - d , center.Y - d, center.Z + d), new Vector2(0, 0)) ,
-                    new Vertex(new Vector3(center.X - d , center.Y + d, center.Z - d), new Vector2(1, 1)) ,
-                    new Vertex(new Vector3(center.X - d , center.Y + d, center.Z + d), new Vector2(0, 1)) ,
-                    new Vertex(new Vector3(center.X + d , center.Y - d, center.Z - d), new Vector2(0, 0)) ,
-                    new Vertex(new Vector3(center.X + d , center.Y - d, center.Z + d), new Vector2(1, 1)) ,
-                    new Vertex(new Vector3(center.X + d , center.Y + d, center.Z - d), new Vector2(0, 1)) ,
-                    new Vertex(new Vector3(center.X + d , center.Y + d, center.Z + d), new Vector2(1, 0)) ,
+                    new Vertex(new Vector3(center.X - d, center.Y - d, center.Z), new Vector2(0, 0)),
+                    new Vertex(new Vector3(center.X - d, center.Y + d, center.Z), new Vector2(0, 1)),
+                    new Vertex(new Vector3(center.X + d, center.Y - d, center.Z), new Vector2(1, 0)),
+                    new Vertex(new Vector3(center.X + d, center.Y + d, center.Z), new Vector2(1, 1)),
                 };
 
             List<RenderLib.Polygon> Indexes = new List<RenderLib.Polygon>()
                 {
-                    new RenderLib.Polygon(0,1,3) ,
-                    new RenderLib.Polygon(0,2,3) ,
-                    new RenderLib.Polygon(0,1,5) ,
-                    new RenderLib.Polygon(0,4,5) ,
-                    new RenderLib.Polygon(4,5,7) ,
-                    new RenderLib.Polygon(4,6,7) ,
-                    new RenderLib.Polygon(7,3,2) ,
-                    new RenderLib.Polygon(7,6,2) ,
-                    new RenderLib.Polygon(3,1,7) ,
-                    new RenderLib.Polygon(1,7,5) ,
-                    new RenderLib.Polygon(2,0,6) ,
-                    new RenderLib.Polygon(0,6,4)
+                    new RenderLib.Polygon(0,1,2),
+                    new RenderLib.Polygon(1,2,3)
                 };
 
             PolModel model = new PolModel(Vertices, Indexes, new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\UI\imgs\test.png"), Pivot.BasePivot(center));
-            //model.Rotate((float)Math.PI, Axis.X);
+            model.Rotate((float)Math.PI / 4, Axis.Y);
 
-            Camera cam = new Camera(Pivot.BasePivot(0, 0, 150f), 400, 480, 10, 100);
-            //cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
+            Camera cam = new Camera(Pivot.BasePivot(0, 0, 150f), 512, 512, 10, 100);
+            //cam.RotateAt(center, -(float)Math.PI, Axis.X);
 
             Scene scene = new Scene(model, cam);
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
