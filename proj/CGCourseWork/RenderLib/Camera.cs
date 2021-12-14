@@ -7,7 +7,25 @@ using System.Numerics;
 
 namespace RenderLib
 {
-    public class Camera : Object3D
+    public interface IProjectable
+    {
+        int ScreenWidth { get; }
+        int ScreenHeight { get; }
+
+        int ScreenNearDist { get; }
+        int ScreenFarDist { get; }
+
+        Matrix4x4 PerspectiveClip { get; }
+
+        Matrix4x4 OrtogonalClip { get; }
+
+        bool IsVisible(Vector3 p);
+        bool IsVisible(Vertex v);
+        bool IsVisible(PolModel model, int pol_num);
+        Vector3 ScreenProjection(Vector3 p);
+    }
+
+    public class Camera : Object3D, IProjectable
     {
         public int ScreenWidth { get; private set; }
         public int ScreenHeight { get; private set; }
