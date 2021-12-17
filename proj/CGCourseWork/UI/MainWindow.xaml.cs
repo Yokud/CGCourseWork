@@ -46,7 +46,7 @@ namespace UI
                     new RenderLib.Polygon(1,2,3)
                 };
 
-            PolModel model = new PolModel(Vertices, Indexes, new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\UI\imgs\test.png"), Pivot.BasePivot(center));
+            PolModel model = new PolModel(Vertices, Indexes, new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\UI\imgs\test.png"), Pivot.BasePivot(center));
             model.Rotate((float)Math.PI / 4, Axis.Y);
 
             Camera cam = new Camera(Pivot.BasePivot(0, 0, 150f), 512, 512, 10, 100);

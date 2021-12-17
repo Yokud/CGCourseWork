@@ -35,6 +35,8 @@ namespace RenderLib
         public Vertex(float x, float y, float z)
         {
             Position = new Vector3(x, y, z);
+
+            AdjacentPolygons = new List<int>();
         }
 
         public Vertex(Vector3 pos)
@@ -95,12 +97,13 @@ namespace RenderLib
         }
 
         /// <summary>
-        /// Преобразование вершины по заданной матрице
+        /// Преобразование вершины и нормали вершины по заданной матрице
         /// </summary>
         /// <param name="matr">Матрица преобразования</param>
         public void Transform(Matrix4x4 matr)
         {
             Position = Position.Transform(matr);
+            Normal = Normal.Transform(matr);
         }
     }
 

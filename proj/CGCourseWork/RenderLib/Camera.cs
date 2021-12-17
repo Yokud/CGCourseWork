@@ -21,7 +21,7 @@ namespace RenderLib
 
         bool IsVisible(Vector3 p);
         bool IsVisible(Vertex v);
-        bool IsVisible(PolModel model, int pol_num);
+        bool IsVisible(PolModel model, Polygon pol);
         Vector3 ScreenProjection(Vector3 p);
     }
 
@@ -81,9 +81,9 @@ namespace RenderLib
             return IsVisible(v.Position);
         }
 
-        public bool IsVisible(PolModel model, int pol_num)
+        public bool IsVisible(PolModel model, Polygon pol)
         {
-            return IsVisible(model.Vertices[model.Polygons[pol_num][0]]) && IsVisible(model.Vertices[model.Polygons[pol_num][1]]) && IsVisible(model.Vertices[model.Polygons[pol_num][2]]);
+            return IsVisible(model.GetPolVertex(pol, 0)) && IsVisible(model.GetPolVertex(pol, 1)) && IsVisible(model.GetPolVertex(pol, 2));
         }
 
         public override void Move(float dx, float dy, float dz)

@@ -32,6 +32,7 @@ namespace RenderLib
 
             CalcNormals();
             CalcAdjPols();
+            CalcVertexNormals();
         }
 
         public override void Move(float dx, float dy, float dz)
@@ -78,9 +79,42 @@ namespace RenderLib
             }
         }
 
+        protected void CalcVertexNormals()
+        {
+            foreach (var v in Vertices)
+            {
+                Vector3 sum_norms = new Vector3(0, 0, 0);
+
+                foreach (var ap in v.AdjacentPolygons)
+                    sum_norms += GetPolNormal(Polygons[ap]);
+
+                v.Normal = sum_norms / v.AdjacentPolygons.Count;
+            }
+        }
+
         public object Clone()
         {
             return new PolModel(Vertices, Polygons, Texture, Pivot);
+        }
+
+        public Vertex GetPolVertex(Polygon pol, int vert_num)
+        {
+            if (vert_num > -1 && vert_num < 3)
+                return Vertices[pol[vert_num]];
+            else
+                throw new Exception("Недопустимый номер вершины!\n");
+        }
+
+        public Vertex[] GetPolVertices(Polygon pol)
+        {
+            return new Vertex[] { GetPolVertex(pol, 0), GetPolVertex(pol, 1), GetPolVertex(pol, 2) };
+        }
+
+        public Vector3 GetPolNormal(Polygon pol)
+        {
+            int index = Polygons.IndexOf(pol);
+
+            return Normals[index];
         }
 
         public Matrix4x4 ToModelMatrix => Pivot.LocalCoordsMatrix;
