@@ -65,8 +65,14 @@ namespace RenderLib
         /// <param name="matrix4X4">Матрица преобразования</param>
         public static Vector3 Transform(this Vector3 v, Matrix4x4 matrix4X4)
         {
-            Vector4 v4 = v.ToVec4();
-            Vector4 new_v = Vector4.Transform(v, matrix4X4);
+            Vector4 new_v = Vector4.Transform(v.ToVec4(), matrix4X4);
+            return new_v.FromVec4();
+        }
+
+        public static Vector3 Transform(this Vector3 v, Matrix4x4 matrix4X4, out float w)
+        {
+            Vector4 new_v = Vector4.Transform(v.ToVec4(), matrix4X4);
+            w = new_v.W;
             return new_v.FromVec4();
         }
 
@@ -76,7 +82,7 @@ namespace RenderLib
         /// <param name="v"></param>
         /// <param name="w"></param>
         /// <returns></returns>
-        public static Vector4 ToVec4(this Vector3 v, float w = 1)
+        public static Vector4 ToVec4(this Vector3 v, float w = 1f)
         {
             return new Vector4(v.X, v.Y, v.Z, w);
         }

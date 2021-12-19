@@ -10,13 +10,15 @@ namespace RenderLib
     {
         public Camera Camera { get; private set; }
         public PolModel Model { get; private set; }
+        public DirectionalLight LightSource { get; private set; }
 
-        public Scene(PolModel model, Camera cam)
+        public Scene(PolModel model, Camera cam, DirectionalLight light)
         {
             Model = model;
             Camera = cam;
+            LightSource = light;
         }
 
-        public List<Object3D> Objects => new List<Object3D>() { Model, Camera };
+        public List<Object3D> Objects => new List<Object3D>() { Model, Camera, LightSource };
     }
 }

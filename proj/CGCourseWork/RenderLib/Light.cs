@@ -9,58 +9,104 @@ namespace RenderLib
 {
     public abstract class Light : Object3D
     {
-        protected float intensity;
-        public abstract float Intensity { get; protected set; }
+        protected float intensity, diffuse_coef;
+        public abstract float MaxIntensity { get; protected set; }
+        public abstract float DiffuseCoef { get; protected set; }
+
+        public abstract float GetAngleIntensity(Vector3 normal, Vector3 light_dir);
     }
 
     public class DirectionalLight : Light, IProjectable
     {
-        public DirectionalLight(Pivot p, float intensity, Vector3 l_dir)
+        private static double fov = Math.PI / 2;
+        private float r, t, tg_fov = (float)Math.Tan(fov / 2);
+
+        public DirectionalLight(Pivot p, float intensity, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
         {
             Pivot = p;
-            Intensity = intensity;
+            MaxIntensity = intensity;
+            DiffuseCoef = dif_coef;
             LightDirection = l_dir;
+
+            ScreenWidth = width;
+            ScreenHeight = height;
+            ScreenNearDist = 0.001f;
+            ScreenFarDist = 1e10f;
+
+            t = ScreenNearDist * tg_fov;
+            r = t * ((float)width / height);
         }
 
-        public override float Intensity
+        public override float MaxIntensity
         {
             get => intensity;
             protected set
             {
-                if (value < 0)
+                if (value < 0 || value > 1)
                     throw new Exception("Недопустимое значение интенсивности света!\n");
                 else
                     intensity = value;
             }
         }
 
+        public override float DiffuseCoef
+        {
+            get => diffuse_coef;
+            protected set
+            {
+                if (value < 0 || value > 1)
+                    throw new Exception("Недопустимое значение коэффициента диффузного отражения!\n");
+                else
+                    diffuse_coef = value;
+            }
+        }
+
         public Vector3 LightDirection { get; private set; }
 
-        public int ScreenWidth => throw new NotImplementedException();
+        public int ScreenWidth { get; private set; }
 
-        public int ScreenHeight => throw new NotImplementedException();
+        public int ScreenHeight { get; private set; }
 
-        public int ScreenNearDist => throw new NotImplementedException();
+        public float ScreenNearDist { get; private set; }
 
-        public int ScreenFarDist => throw new NotImplementedException();
+        public float ScreenFarDist { get; private set; }
 
-        public Matrix4x4 PerspectiveClip => throw new NotImplementedException();
+        public Matrix4x4 PerspectiveClip => new Matrix4x4
+        (
+            ScreenNearDist / r, 0, 0, 0,
+            0, ScreenNearDist / t, 0, 0,
+            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), -1,
+            0, 0, 2 * ScreenNearDist * ScreenFarDist / (ScreenNearDist - ScreenFarDist), 0
+        );
 
-        public Matrix4x4 OrtogonalClip => throw new NotImplementedException();
+        public Matrix4x4 OrtogonalClip => new Matrix4x4
+        (
+            1f / r, 0, 0, 0,
+            0, 1f / t, 0, 0,
+            0, 0, -2.0f / (ScreenFarDist - ScreenNearDist), 0,
+            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), 1
+        );
+
+        public override float GetAngleIntensity(Vector3 normal, Vector3 light_dir)
+        {
+            return MaxIntensity * diffuse_coef * Vector3.Dot(normal, light_dir);
+        }
 
         public bool IsVisible(Vector3 p)
         {
-            throw new NotImplementedException();
+            float min = -1, max = 1;
+
+            return min <= p.X && p.X <= max && min <= p.Y && p.Y <= max && min <= p.Z && p.Z <= max;
         }
 
         public bool IsVisible(Vertex v)
         {
-            throw new NotImplementedException();
+            return IsVisible(v.Position);
         }
 
         public bool IsVisible(PolModel model, Polygon pol)
         {
-            throw new NotImplementedException();
+            return IsVisible(model.GetPolVertex(pol, 0)) && IsVisible(model.GetPolVertex(pol, 1)) && IsVisible(model.GetPolVertex(pol, 2));
         }
 
         public override void Move(float dx, float dy, float dz)
@@ -73,6 +119,11 @@ namespace RenderLib
             Pivot.Rotate(angle, axis);
         }
 
+        public void RotateAt(Vector3 p, float angle, Axis axis)
+        {
+            Pivot.RotateAt(p, angle, axis);
+        }
+
         public override void Scale(float kx, float ky, float kz)
         {
             return;
@@ -80,7 +131,10 @@ namespace RenderLib
 
         public Vector3 ScreenProjection(Vector3 p)
         {
-            throw new NotImplementedException();
+            float x = ScreenWidth / 2.0f * (1 + p.X);
+            float y = ScreenHeight - ScreenHeight / 2.0f * (1 + p.Y);
+
+            return new Vector3(x, y, p.Z);
         }
     }
 }

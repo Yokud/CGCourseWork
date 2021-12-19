@@ -105,6 +105,12 @@ namespace RenderLib
             Position = Position.Transform(matr);
             Normal = Normal.Transform(matr);
         }
+
+        public void Transform(Matrix4x4 matr, out float w)
+        {
+            Position = Position.Transform(matr, out w);
+            Normal = Normal.Transform(matr);
+        }
     }
 
     /// <summary>

@@ -34,25 +34,35 @@ namespace UI
             var d = sideLen / 2;
             List<Vertex> Vertices = new List<Vertex>()
                 {
-                    new Vertex(new Vector3(center.X - d, center.Y - d, center.Z), new Vector2(0, 0)),
-                    new Vertex(new Vector3(center.X - d, center.Y + d, center.Z), new Vector2(0, 1)),
-                    new Vertex(new Vector3(center.X + d, center.Y - d, center.Z), new Vector2(1, 0)),
-                    new Vertex(new Vector3(center.X + d, center.Y + d, center.Z), new Vector2(1, 1)),
+                    new Vertex(new Vector3(center.X - d, center.Y - d, center.Z), new Vector2(2, 2)),
+                    new Vertex(new Vector3(center.X - d, center.Y + d, center.Z), new Vector2(2, 0)),
+                    new Vertex(new Vector3(center.X + d, center.Y - d, center.Z), new Vector2(0, 2)),
+                    new Vertex(new Vector3(center.X + d, center.Y + d, center.Z), new Vector2(0, 0)),
+
+                    new Vertex(new Vector3(center.X - sideLen - d, center.Y - d, center.Z), new Vector2(1, 1)),
+                    new Vertex(new Vector3(center.X - sideLen - d, center.Y + d, center.Z), new Vector2(1, 0)),
+                    new Vertex(new Vector3(center.X - sideLen + d, center.Y - d, center.Z), new Vector2(0, 1)),
+                    new Vertex(new Vector3(center.X - sideLen + d, center.Y + d, center.Z), new Vector2(0, 0)),
                 };
 
             List<RenderLib.Polygon> Indexes = new List<RenderLib.Polygon>()
                 {
                     new RenderLib.Polygon(0,1,2),
-                    new RenderLib.Polygon(1,2,3)
+                    new RenderLib.Polygon(1,2,3),
+
+                    new RenderLib.Polygon(4, 5, 6),
+                    new RenderLib.Polygon(5, 6, 7)
                 };
 
             PolModel model = new PolModel(Vertices, Indexes, new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\UI\imgs\test.png"), Pivot.BasePivot(center));
             model.Rotate((float)Math.PI / 4, Axis.Y);
 
-            Camera cam = new Camera(Pivot.BasePivot(0, 0, 150f), 512, 512, 10, 100);
+            Camera cam = new Camera(Pivot.BasePivot(0, 0, 300f), 512, 512, 10, 1000);
             //cam.RotateAt(center, -(float)Math.PI, Axis.X);
 
-            Scene scene = new Scene(model, cam);
+            DirectionalLight light = new DirectionalLight(Pivot.BasePivot(-150, 100, 0), 1f, Vector3.Normalize(new Vector3(1, -1, 0)));
+
+            Scene scene = new Scene(model, cam, light);
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
             Facade fac = new Facade(scene, draw);
 

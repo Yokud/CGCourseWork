@@ -15,5 +15,11 @@ namespace RenderLib
             lhs = rhs;
             rhs = temp;
         }
+
+        public static List<T> Clone<T>(this List<T> list)
+        {
+            List<T> temp = new List<T>(list);
+            return temp;
+        }
     }
 }
