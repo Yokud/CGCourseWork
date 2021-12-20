@@ -79,98 +79,57 @@ namespace RenderLib
                 var second = pol.ScreenVertices[1];
                 var third = pol.ScreenVertices[2];
 
-                if (first.ScreenY > second.ScreenY)
-                    SystemAddon.Swap(ref first, ref second);
-                if (first.ScreenY > third.ScreenY)
-                    SystemAddon.Swap(ref first, ref third);
-                if (second.ScreenY > third.ScreenY)
-                    SystemAddon.Swap(ref second, ref third);
-
-                int min_y = first.ScreenY;
-                int max_y = third.ScreenY;
-
-
+                // Коэффициенты плоскости
                 float a = (second.ScreenY - first.ScreenY) * (third.Z - first.Z) - (second.Z - first.Z) * (third.ScreenY - first.ScreenY);
                 float b = (second.Z - first.Z) * (third.ScreenX - first.ScreenX) - (second.ScreenX - first.ScreenX) * (third.Z - first.Z);
                 float c = (second.ScreenX - first.ScreenX) * (third.ScreenY - first.ScreenY) - (second.ScreenY - first.ScreenY) * (third.ScreenX - first.ScreenX);
                 float d = -(a * first.ScreenX + b * first.ScreenY + c * first.Z);
 
-                for (int yi = Math.Max(0, min_y); yi <= Math.Min(max_y, height - 1); yi++)
+                List<Point> outline_points = new List<Point>();
+
+                for (int i = 0; i < 3; i++)
                 {
-                    float beta, alpha = (float)(yi - min_y) / (max_y - min_y);
-                    int x1 = MathAddon.RoundToInt(MathAddon.Lepr(first.ScreenX, third.ScreenX, alpha));
-                    float u1 = MathAddon.Lepr(first.U / first.W, third.U / third.W, alpha);
-                    float v1 = MathAddon.Lepr(first.V / first.W, third.V / third.W, alpha);
-                    float w_11 = MathAddon.Lepr(1 / first.W, 1 / third.W, alpha);
+                    var line = Brezenhem(pol.ScreenVertices[i % 3].ScreenX, pol.ScreenVertices[i % 3].ScreenY, pol.ScreenVertices[(i + 1) % 3].ScreenX, pol.ScreenVertices[(i + 1) % 3].ScreenY);
+                    outline_points.AddRange(line);
+                }
+                
+                var outline_segs = ClusterizeByY(outline_points);
 
-                    int x2;
-                    float u2, v2, w_12;
+                foreach (var seg in outline_segs)
+                {
+                    int yi = seg.Key;
+                    int x1 = seg.Value.MinX, x2 = seg.Value.MaxX;
 
-                    if (yi >= second.ScreenY)
-                    {
-                        if (third.ScreenY - second.ScreenY != 0)
-                        {
-                            beta = (float)(yi - second.ScreenY) / (third.ScreenY - second.ScreenY);
-                            x2 = MathAddon.RoundToInt(MathAddon.Lepr(second.ScreenX, third.ScreenX, beta));
-                            u2 = MathAddon.Lepr(second.U / second.W, third.U / third.W, beta);
-                            v2 = MathAddon.Lepr(second.V / second.W, third.V / third.W, beta);
-                            w_12 = MathAddon.Lepr(1 / second.W, 1 / third.W, beta);
-                        }
-                        else
-                        {
-                            x2 = second.ScreenX;
-                            u2 = second.U / second.W;
-                            v2 = second.V / second.W;
-                            w_12 = 1 / second.W;
-                        }
-                    }
-                    else
-                    {
-                        if (second.ScreenY - first.ScreenY != 0)
-                        {
-                            beta = (float)(yi - first.ScreenY) / (second.ScreenY - first.ScreenY);
-                            x2 = MathAddon.RoundToInt(MathAddon.Lepr(first.ScreenX, second.ScreenX, beta));
-                            u2 = MathAddon.Lepr(first.U / first.W, second.U / second.W, beta);
-                            v2 = MathAddon.Lepr(first.V / first.W, second.V / second.W, beta);
-                            w_12 = MathAddon.Lepr(1 / first.W, 1 / second.W, beta);
-                        }
-                        else
-                        {
-                            x2 = second.ScreenX;
-                            u2 = second.U / second.W;
-                            v2 = second.V / second.W;
-                            w_12 = 1 / second.W;
-                        }
-                    }
+                    Vector3 bar_p1 = Baricentric(first.ScreenPos, second.ScreenPos, third.ScreenPos, new Point(x1, yi));
+                    Vector3 bar_p2 = Baricentric(first.ScreenPos, second.ScreenPos, third.ScreenPos, new Point(x2, yi));
 
-                    if (x1 > x2)
-                    {
-                        SystemAddon.Swap(ref x1, ref x2);
-                        SystemAddon.Swap(ref u1, ref u2);
-                        SystemAddon.Swap(ref v1, ref v2);
-                    }
+
+                    float w_11 = 1f / first.W * bar_p1.X + 1f / second.W * bar_p1.Y + 1f / third.W * bar_p1.Z;
+                    float w_12 = 1f / first.W * bar_p2.X + 1f / second.W * bar_p2.Y + 1f / third.W * bar_p2.Z;
+
+                    Vector2 uv_w1 = first.TextureCoords / first.W * bar_p1.X + second.TextureCoords / second.W * bar_p1.Y + third.TextureCoords / third.W * bar_p1.Z;
+                    Vector2 uv_w2 = first.TextureCoords / first.W * bar_p2.X + second.TextureCoords / second.W * bar_p2.Y + third.TextureCoords / third.W * bar_p2.Z;
+
+
+                    float dw_1 = (w_12 - w_11) / (x2 - x1 + 1);
+                    Vector2 d_uv_w = (uv_w2 - uv_w1) / (x2 - x1 + 1);
+
+                    Vector2 uv_w = uv_w1;
+                    float w_1 = w_11;
 
                     float zi = -(a * x1 + b * yi + d) / c;
-
-                    for (int xi = Math.Max(x1, 0); xi < Math.Min(x2, width - 1); xi++, zi -= a / c)
+                    for (int xi = x1; xi <= x2; xi++)
                     {
-                        Color texel;
-                        float gamma = (float)(xi - x1) / (x2 - x1);
-                        float u = x2 - x1 != 0 ? MathAddon.Lepr(u1, u2, gamma) : u1;
-                        float v = x2 - x1 != 0 ? MathAddon.Lepr(v1, v2, gamma) : v1;
-                        float w_1 = x2 - x1 != 0 ? MathAddon.Lepr(w_11, w_12, gamma) : w_11;
-
-                        u /= w_1;
-                        v /= w_1;
-
-                        texel = pol.Texture.GetTexel(u, v);
+                        Color texel = pol.Texture.GetTexel(uv_w.X / w_1, uv_w.Y / w_1);
 
                         pol.Pixels.Add(new FragmentInfo(xi, yi, zi, texel));
+
+                        uv_w += d_uv_w;
+                        w_1 += dw_1;
                     }
                 }
             }
         }
-
 
         private void ZBuffer(List<PolygonInfo> pols)
         {
@@ -190,6 +149,88 @@ namespace RenderLib
                         FrameBuffer.SetPixel(pixel.ScreenX, pixel.ScreenY, pixel.Color);
                     }
                 }
+            }
+        }
+
+        private Vector3 Baricentric(Point a, Point b, Point c, Point p)
+        {
+            Vector3 bar = new Vector3();
+
+            float det = (b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y);
+            bar.X = ((b.Y - c.Y) * (p.X - c.X) + (c.X - b.X) * (p.Y - c.Y)) / det;
+            bar.Y = ((c.Y - a.Y) * (p.X - c.X) + (a.X - c.X) * (p.Y - c.Y)) / det;
+            bar.Z = 1 - bar.X - bar.Y;
+
+            return bar;
+        }
+
+        private List<Point> Brezenhem(int x_start, int y_start, int x_end, int y_end)
+        {
+            List<Point> points = new List<Point>();
+
+            bool swap_f;
+            int dx = x_end - x_start, dy = y_end - y_start;
+            int sx = Math.Sign(dx), sy = Math.Sign(dy);
+
+            dx = Math.Abs(dx);
+            dy = Math.Abs(dy);
+
+            if ((swap_f = dy > dx))
+                SystemAddon.Swap(ref dx, ref dy);
+
+            int error = 2 * dy - dx;
+            int x = x_start, y = y_start;
+            for (int i = 0; i <= dx; i++)
+            {
+                points.Add(new Point(x, y));
+                if (error >= 0)
+                {
+                    if (swap_f)
+                        x += sx;
+                    else
+                        y += sy;
+                    error -= 2 * dx;
+                }
+
+                if (swap_f)
+                    y += sy;
+                else
+                    x += sx;
+
+                error += 2 * dy;
+            }
+
+            return points;
+        }
+
+        private Dictionary<int, SegmentX> ClusterizeByY(List<Point> points)
+        {
+            Dictionary<int, SegmentX> outline = new Dictionary<int, SegmentX>();
+
+            foreach (var point in points)
+            {
+                if (!outline.ContainsKey(point.Y))
+                    outline.Add(point.Y, new SegmentX(point.X, point.X));
+                else
+                {
+                    outline[point.Y].MinX = Math.Min(outline[point.Y].MinX, point.X);
+                    outline[point.Y].MaxX = Math.Max(outline[point.Y].MaxX, point.X);
+                }
+            }
+
+            return outline;
+        }
+
+
+        class SegmentX
+        {
+            public int MinX { get; set; }
+            public int MaxX { get; set; }
+
+            public SegmentX(int x_min, int x_max)
+            {
+                MinX = x_min;
+                MaxX = x_max;
             }
         }
     }
@@ -236,6 +277,7 @@ namespace RenderLib
         public float Z { get; set; }
         public float W { get; set; }
 
+        public Point ScreenPos => new Point(ScreenX, ScreenY);
         public Vector2 TextureCoords => new Vector2(U, V);
         public float U { get; set; }
         public float V { get; set; }

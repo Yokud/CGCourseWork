@@ -95,8 +95,8 @@ namespace RenderLib
             if (v < 0 || v > 1)
                 v -= (float)Math.Floor(v);
 
-            int x_texel = Math.Min((int)Math.Floor(Texels.Width * u), Texels.Width - 1);
-            int y_texel = Math.Min((int)Math.Floor(Texels.Height * v), Texels.Height - 1);
+            int x_texel = MathAddon.RoundToInt((Texels.Width - 1) * u);// % Texels.Width;
+            int y_texel = MathAddon.RoundToInt((Texels.Height - 1) * v);// % Texels.Height;
 
             return Texels.GetPixel(x_texel, y_texel);
         }

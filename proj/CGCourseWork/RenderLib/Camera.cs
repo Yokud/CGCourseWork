@@ -128,7 +128,7 @@ namespace RenderLib
             float x = ScreenWidth / 2.0f * (1 + p.X);
             float y = ScreenHeight - ScreenHeight / 2.0f * (1 + p.Y);
 
-            return new Vector3(x, y, p.Z);
+            return new Vector3(MathAddon.RoundToInt(x), MathAddon.RoundToInt(y), p.Z);
         }
     }
 }
