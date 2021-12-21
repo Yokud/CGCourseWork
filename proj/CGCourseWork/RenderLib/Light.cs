@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -9,11 +10,21 @@ namespace RenderLib
 {
     public abstract class Light : Object3D
     {
+        protected static readonly float min_intensity = 0.2f;
         protected float intensity, diffuse_coef;
         public abstract float MaxIntensity { get; protected set; }
         public abstract float DiffuseCoef { get; protected set; }
 
         public abstract float GetAngleIntensity(Vector3 normal, Vector3 light_dir);
+        public Color GetColorByIntensity(Color c, float intensity)
+        {
+            if (intensity < min_intensity)
+                return Color.FromArgb(c.A, MathAddon.RoundToInt(c.R * min_intensity), MathAddon.RoundToInt(c.G * min_intensity), MathAddon.RoundToInt(c.B * min_intensity));
+            else if (intensity > MaxIntensity)
+                return c;
+            else
+                return Color.FromArgb(c.A, MathAddon.RoundToInt(c.R * intensity), MathAddon.RoundToInt(c.G * intensity), MathAddon.RoundToInt(c.B * intensity));
+        }
     }
 
     public class DirectionalLight : Light, IProjectable
@@ -21,10 +32,10 @@ namespace RenderLib
         private static double fov = Math.PI / 2;
         private float r, t, tg_fov = (float)Math.Tan(fov / 2);
 
-        public DirectionalLight(Pivot p, float intensity, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
+        public DirectionalLight(Pivot p, Vector3 l_dir, float max_intensity = 1f, float dif_coef = 1f, int width = 512, int height = 512)
         {
             Pivot = p;
-            MaxIntensity = intensity;
+            MaxIntensity = max_intensity;
             DiffuseCoef = dif_coef;
             LightDirection = l_dir;
 
@@ -89,7 +100,9 @@ namespace RenderLib
 
         public override float GetAngleIntensity(Vector3 normal, Vector3 light_dir)
         {
-            return MaxIntensity * diffuse_coef * Vector3.Dot(normal, light_dir);
+            float intensity = MaxIntensity * diffuse_coef * Vector3.Dot(normal, light_dir);
+
+            return intensity < 0 ? 0 : intensity;
         }
 
         public bool IsVisible(Vector3 p)

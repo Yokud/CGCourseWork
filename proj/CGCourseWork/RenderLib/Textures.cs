@@ -24,9 +24,9 @@ namespace RenderLib
             FastBitmap fastBitmap = new FastBitmap(bitmap.Width, bitmap.Height);
             for (int i = 0; i < bitmap.Width; i++)
             {
-                for (int g = 0; g < bitmap.Height; g++)
+                for (int j = 0; j < bitmap.Height; j++)
                 {
-                    fastBitmap.Bits[g * bitmap.Width + i] = bitmap.GetPixel(i, g).ToArgb();
+                    fastBitmap.Bits[j * bitmap.Width + i] = bitmap.GetPixel(i, bitmap.Height - 1 - j).ToArgb();
                 }
             }
             return fastBitmap;
