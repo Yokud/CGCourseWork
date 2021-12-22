@@ -51,10 +51,17 @@
     <Compile Include="Light.cs" />
     <Compile Include="Scene.cs" />
     <Compile Include="SystemAddon.cs" />
+    <Compile Include="Terrain.cs" />
     <Compile Include="Textures.cs" />
     <Compile Include="PolModel.cs" />
     <Compile Include="MathAddon.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HeightMapLib\HeightMapLib.csproj">
+      <Project>{a91bc767-f48d-4b79-b2f4-7e9d05eeee4c}</Project>
+      <Name>HeightMapLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
