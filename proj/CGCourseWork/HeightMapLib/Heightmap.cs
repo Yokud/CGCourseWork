@@ -22,7 +22,7 @@ namespace HeightMapLib
         int width, height;
         NoiseExpresion expresion;
 
-        private float[,] NoiseMap { get; set; }
+        public float[,] NoiseMap { get; private set; }
         ILandGenerator LandGenerator { get; set; }
 
         public HeightMap(int width, int height, ILandGenerator lg, NoiseExpresion exp = null)
@@ -82,7 +82,7 @@ namespace HeightMapLib
             set => LandGenerator.Seed = value;
         }
 
-        public void GenMap()
+        private void GenMap()
         {
             NoiseMap = LandGenerator.GenMap(Width, Height);
 
@@ -154,6 +154,16 @@ namespace HeightMapLib
                 }
 
             return (min, max);
+        }
+
+        public void Normalize()
+        {
+            var (h_min, h_max) = MinMax();
+            float delta = h_max - h_min;
+
+            for (int i = 0; i < Width; i++)
+                for (int j = 0; j < Height; j++)
+                    NoiseMap[i, j] = (NoiseMap[i, j] - h_min) / delta;
         }
 
         public void AddFilter(Filter f)

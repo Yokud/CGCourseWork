@@ -17,6 +17,16 @@ namespace RenderLib
 
         public static readonly Color DefaultTexture = Color.Red;
 
+
+        public PolModel()
+        {
+            Vertices = new List<Vertex>();
+            Polygons = new List<Polygon>();
+            Normals = new List<Vector3>();
+            Texture = new Texture();
+            Pivot = Pivot.BasePivot(0, 0, 0);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -33,9 +43,7 @@ namespace RenderLib
 
             Normals = new List<Vector3>();
 
-            CalcNormals();
-            CalcAdjPols();
-            CalcVertexNormals();
+            RecalcProcs();
         }
 
         public PolModel(List<Vertex> verts, List<Polygon> pols, Pivot p) : this(verts, pols, new Texture(), p)
@@ -65,7 +73,14 @@ namespace RenderLib
             OnScaleEvent(kx, ky, kz);
         }
 
-        protected void CalcNormals()
+        protected void RecalcProcs()
+        {
+            RecalcNormals();
+            RecalcAdjPols();
+            RecalcVertexNormals();
+        }
+
+        protected void RecalcNormals()
         {
             foreach (var pol in Polygons)
             {
@@ -76,7 +91,7 @@ namespace RenderLib
             }
         }
 
-        protected void CalcAdjPols()
+        protected void RecalcAdjPols()
         {
             for (int i = 0; i < Vertices.Count; i++)
             {
@@ -87,7 +102,7 @@ namespace RenderLib
             }
         }
 
-        protected void CalcVertexNormals()
+        protected void RecalcVertexNormals()
         {
             foreach (var v in Vertices)
             {

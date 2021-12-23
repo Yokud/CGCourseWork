@@ -40,10 +40,10 @@ namespace RenderLib
 
         private List<PolygonInfo> VerticesShading(Scene scene)
         {
-            var matr_move = Matrix4x4.CreateTranslation(scene.Model.Pivot.Center - scene.Camera.Pivot.Center);
-            var model_view_matr = scene.Model.ToWorldMatrix * matr_move * scene.Camera.Pivot.LocalCoordsMatrix * scene.Camera.PerspectiveClip;
+            var matr_move = Matrix4x4.CreateTranslation(scene.Terrain.VisibleTerrainModel.Pivot.Center - scene.Camera.Pivot.Center);
+            var model_view_matr = scene.Terrain.VisibleTerrainModel.ToWorldMatrix * matr_move * scene.Camera.Pivot.LocalCoordsMatrix * scene.Camera.PerspectiveClip;
 
-            var vertices = new List<Vertex>(scene.Model.Vertices);
+            var vertices = new List<Vertex>(scene.Terrain.VisibleTerrainModel.Vertices);
             List<PolygonInfo> visible_pols = new List<PolygonInfo>();
             List<float> ws = new List<float>();
             List<float> light_levels = new List<float>();
@@ -52,7 +52,7 @@ namespace RenderLib
 
             foreach (var v in vertices)
             {
-                Vector3 v_norm = scene.Model.Pivot.ToGlobalCoords(v.Normal);
+                Vector3 v_norm = scene.Terrain.VisibleTerrainModel.Pivot.ToGlobalCoords(v.Normal);
 
                 float light_level = scene.LightSource.GetAngleIntensity(Vector3.Normalize(v_norm), Vector3.Normalize(light_dir)); 
 
@@ -61,12 +61,11 @@ namespace RenderLib
                 light_levels.Add(light_level);
             }            
 
-            foreach (var pol in scene.Model.Polygons)
+            foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
             {
                 if (scene.Camera.IsVisible(vertices, pol))
                 {
-                    visible_pols.Add(new PolygonInfo(vertices[pol[0]], vertices[pol[1]], vertices[pol[2]], scene.Model.GetPolNormal(pol).Transform(model_view_matr)));
-                    visible_pols[visible_pols.Count - 1].Texture = scene.Model.Texture;
+                    visible_pols.Add(new PolygonInfo(vertices[pol[0]], vertices[pol[1]], vertices[pol[2]], scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
 
                     for (int i = 0; i < 3; i++)
                     {
@@ -89,6 +88,12 @@ namespace RenderLib
                 var first = pol.ScreenVertices[0];
                 var second = pol.ScreenVertices[1];
                 var third = pol.ScreenVertices[2];
+
+                int x_min, x_max, y_min, y_max;
+                x_min = MathAddon.Min3(first.ScreenX, second.ScreenX, third.ScreenX);
+                x_max = MathAddon.Max3(first.ScreenX, second.ScreenX, third.ScreenX);
+                y_min = MathAddon.Min3(first.ScreenY, second.ScreenY, third.ScreenY);
+                y_max = MathAddon.Max3(first.ScreenY, second.ScreenY, third.ScreenY);
 
                 // Коэффициенты плоскости
                 float a = (second.ScreenY - first.ScreenY) * (third.Z - first.Z) - (second.Z - first.Z) * (third.ScreenY - first.ScreenY);

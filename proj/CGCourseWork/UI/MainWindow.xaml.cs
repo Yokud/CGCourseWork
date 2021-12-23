@@ -49,12 +49,14 @@ namespace UI
             PolModel model = new PolModel(Vertices, Indexes, Pivot.BasePivot(center));
             //model.Rotate((float)Math.PI * 17f / 36f, Axis.Y);
 
-            Camera cam = new Camera(Pivot.BasePivot(0, 0, 100), 512, 512, 10, 1000);
+            Camera cam = new Camera(Pivot.BasePivot(0, 40, 600), 512, 512, 10, 1000);
             cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
 
-            DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 0, 100), Vector3.Normalize(new Vector3(0, 1, 0)));
+            DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 100), Vector3.Normalize(new Vector3(0, -50, -100)));
 
-            Scene scene = new Scene(model, cam, light);
+            Terrain terr = new Terrain(300, 300, 64, 64);
+
+            Scene scene = new Scene(terr, cam, light);
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
             Facade fac = new Facade(scene, draw);
 
@@ -62,7 +64,7 @@ namespace UI
         }
     }
 
-    public static class ABC
+    public static partial class SystemAddon
     {
         public static BitmapImage ToBitmapImage(this Bitmap bitmap)
         {

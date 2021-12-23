@@ -39,6 +39,11 @@ namespace RenderLib
             AdjacentPolygons = new List<int>();
         }
 
+        public Vertex(float x, float y, float z, float u, float v) : this(x, y, z)
+        {
+            TextureCoords = new Vector2(u, v);
+        }
+
         public Vertex(Vector3 pos)
         {
             Position = pos;

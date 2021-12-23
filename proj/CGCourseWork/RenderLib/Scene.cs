@@ -9,16 +9,16 @@ namespace RenderLib
     public class Scene
     {
         public Camera Camera { get; private set; }
-        public PolModel Model { get; private set; }
+        public Terrain Terrain { get; private set; }
         public DirectionalLight LightSource { get; private set; }
 
-        public Scene(PolModel model, Camera cam, DirectionalLight light)
+        public Scene(Terrain terr, Camera cam, DirectionalLight light)
         {
-            Model = model;
+            Terrain = terr;
             Camera = cam;
             LightSource = light;
         }
 
-        public List<Object3D> Objects => new List<Object3D>() { Model, Camera, LightSource };
+        public List<Object3D> Objects => new List<Object3D>() { Terrain.VisibleTerrainModel, Camera, LightSource };
     }
 }

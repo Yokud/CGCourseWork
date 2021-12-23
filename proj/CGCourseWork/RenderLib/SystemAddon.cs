@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RenderLib
 {
-    static class SystemAddon
+    public static partial class SystemAddon
     {
         public static void Swap<T>(ref T lhs, ref T rhs)
         {
