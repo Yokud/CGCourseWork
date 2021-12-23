@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Numerics;
 using System.Drawing;
@@ -11,6 +12,8 @@ namespace RenderLib
 {
     public class Drawer
     {
+        static object lock_obj;
+
         int width, height;
         public FastBitmap FrameBuffer { get; private set; }
         public float[,] DepthBuffer { get; private set; }
@@ -21,6 +24,8 @@ namespace RenderLib
             this.height = height;
             FrameBuffer = new FastBitmap(width, height);
             DepthBuffer = new float[width, height];
+
+            lock_obj = new object();
         }
 
         public void DrawScene(Scene scene)
@@ -38,7 +43,7 @@ namespace RenderLib
             var matr_move = Matrix4x4.CreateTranslation(scene.Model.Pivot.Center - scene.Camera.Pivot.Center);
             var model_view_matr = scene.Model.ToWorldMatrix * matr_move * scene.Camera.Pivot.LocalCoordsMatrix * scene.Camera.PerspectiveClip;
 
-            var vertices = scene.Model.Vertices.Clone();
+            var vertices = new List<Vertex>(scene.Model.Vertices);
             List<PolygonInfo> visible_pols = new List<PolygonInfo>();
             List<float> ws = new List<float>();
             List<float> light_levels = new List<float>();
@@ -227,16 +232,19 @@ namespace RenderLib
         {
             Dictionary<int, SegmentX> outline = new Dictionary<int, SegmentX>();
 
-            foreach (var point in points)
+            Parallel.ForEach(points, point =>
             {
-                if (!outline.ContainsKey(point.Y))
-                    outline.Add(point.Y, new SegmentX(point.X, point.X));
-                else
+                lock (lock_obj)
                 {
-                    outline[point.Y].MinX = Math.Min(outline[point.Y].MinX, point.X);
-                    outline[point.Y].MaxX = Math.Max(outline[point.Y].MaxX, point.X);
+                    if (!outline.ContainsKey(point.Y))
+                        outline.Add(point.Y, new SegmentX(point.X, point.X));
+                    else
+                    {
+                        outline[point.Y].MinX = Math.Min(outline[point.Y].MinX, point.X);
+                        outline[point.Y].MaxX = Math.Max(outline[point.Y].MaxX, point.X);
+                    }
                 }
-            }
+            });
 
             return outline;
         }

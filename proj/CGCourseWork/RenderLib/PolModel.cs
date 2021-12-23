@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
+using System.Drawing;
 
 namespace RenderLib
 {
@@ -13,6 +14,8 @@ namespace RenderLib
         public List<Polygon> Polygons { get; protected set; }
         public List<Vector3> Normals { get; protected set; }
         public Texture Texture { get; protected set; }
+
+        public static readonly Color DefaultTexture = Color.Red;
 
         /// <summary>
         /// 
@@ -33,6 +36,11 @@ namespace RenderLib
             CalcNormals();
             CalcAdjPols();
             CalcVertexNormals();
+        }
+
+        public PolModel(List<Vertex> verts, List<Polygon> pols, Pivot p) : this(verts, pols, new Texture(), p)
+        {
+
         }
 
         public override void Move(float dx, float dy, float dz)

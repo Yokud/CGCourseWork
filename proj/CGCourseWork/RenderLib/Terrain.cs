@@ -28,7 +28,7 @@ namespace RenderLib
             rot_coef_x = rot_coef_y = rot_coef_z = 0;
             scale_coef_x = scale_coef_y = scale_coef_z = 0;
 
-            terrain_model = new TerrainVisibleSection();
+            //terrain_model = new TerrainVisibleSection();
         }
 
         void GetModelFromMap()

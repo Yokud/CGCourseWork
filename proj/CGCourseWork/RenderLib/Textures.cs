@@ -76,6 +76,7 @@ namespace RenderLib
     public class Texture
     {
         public FastBitmap Texels { get; private set; }
+        public Color DefaultTexture { get; private set; }
 
         public Texture(string filepath)
         {
@@ -87,16 +88,24 @@ namespace RenderLib
             Texels = FastBitmap.FromBitmap(bmp);
         }
 
+        public Texture()
+        {
+            DefaultTexture = PolModel.DefaultTexture;
+        }
+
         public Color GetTexel(float u, float v)
         {
+            if (Texels == null)
+                return DefaultTexture;
+
             if (u < 0 || u > 1)
                 u -= (float)Math.Floor(u);
 
             if (v < 0 || v > 1)
                 v -= (float)Math.Floor(v);
 
-            int x_texel = MathAddon.RoundToInt((Texels.Width - 1) * u);// % Texels.Width;
-            int y_texel = MathAddon.RoundToInt((Texels.Height - 1) * v);// % Texels.Height;
+            int x_texel = MathAddon.RoundToInt((Texels.Width - 1) * u);
+            int y_texel = MathAddon.RoundToInt((Texels.Height - 1) * v);
 
             return Texels.GetPixel(x_texel, y_texel);
         }
@@ -108,7 +117,7 @@ namespace RenderLib
 
         public MipMap(List<Texture> textures)
         {
-            MipLevels.AddRange(textures);
+            MipLevels = new List<Texture>(textures);
         }
 
         public int GetMipLevel(int x_min, int x_max, int y_min, int y_max)
