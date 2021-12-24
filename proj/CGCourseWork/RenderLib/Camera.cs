@@ -118,6 +118,13 @@ namespace RenderLib
             Pivot = new Pivot(p, Pivot.XAxis, Pivot.YAxis, Pivot.ZAxis);
         }
 
+        public void RotateTo(Vector3 xa, Vector3 ya, Vector3 za)
+        {
+            Pivot.XAxis = xa;
+            Pivot.YAxis = ya;
+            Pivot.ZAxis = za;
+        }
+
         public void RotateAt(Vector3 p, float angle, Axis axis)
         {
             Pivot.RotateAt(p, angle, axis);

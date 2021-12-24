@@ -15,8 +15,8 @@ namespace RenderLib
         int t_vis_index_x, t_vis_index_z;
         List<Texture> land_textures;
         TerrainVisibleSection terrain_model;
-        float rot_coef_x, rot_coef_y, rot_coef_z;
-        float scale_coef_x, scale_coef_y, scale_coef_z;
+
+        Vector3 scale_coefs;
 
 
         public Terrain(int width, int height, int vis_width, int vis_height, List<Texture> textures) : this(new HeightMap(width, height, 
@@ -28,15 +28,19 @@ namespace RenderLib
         public Terrain(HeightMap map, int vis_width, int vis_height, List<Texture> textures)
         {
             this.map = map;
+
+            //Filter island_filter = new Filter(map.Width, map.Height);
+            //island_filter.Calculate((x, y) => 100 * 100 - ((x - map.Width / 2f) * (x - map.Width / 2f) + (y - map.Height / 2f) * (y - map.Height / 2f)) > 0 ? 100 * 100 - ((x - map.Width / 2f) * (x - map.Width / 2f) + (y - map.Height / 2f) * (y - map.Height / 2f)) : 0);
+            //this.map.AddFilter(island_filter);
+
             t_vis_width = vis_width;
             t_vis_height = vis_height;
 
             t_vis_index_x = t_vis_index_z = 0;
 
-            rot_coef_x = rot_coef_y = rot_coef_z = 0;
-            scale_coef_x = scale_coef_y = scale_coef_z = 0;
+            scale_coefs = new Vector3(1, 1, 1);
 
-            //map.SaveToBmp(@"D:\Repos\CGCourseWork\proj\CGCourseWork\RenderLib\heightmaps\", "test");
+            //map.SaveToBmp(@"D:\Repos\CGCourseWork\proj\CGCourseWork\heightmaps\", "test");
             map.Normalize();
 
             land_textures = textures;
@@ -54,6 +58,8 @@ namespace RenderLib
         public void Scale(float kx, float ky, float kz)
         {
             terrain_model.Scale(kx, ky, kz);
+
+            scale_coefs *= new Vector3(kx, ky, kz);
         }
 
         public void Move(int dx, int dz)
@@ -62,7 +68,7 @@ namespace RenderLib
             {
                 t_vis_index_x += dx;
                 t_vis_index_z += dz;
-                terrain_model = new TerrainVisibleSection(t_vis_width + t_vis_index_x, t_vis_height + t_vis_index_z, map.NoiseMap, land_textures, t_vis_index_x, t_vis_index_z);
+                terrain_model.TerrainUpdate(map.NoiseMap, t_vis_index_x, t_vis_index_z, scale_coefs);
             }
         }
     }
@@ -72,13 +78,14 @@ namespace RenderLib
         List<Texture> land_textures;
         List<TextureType> pols_texture_types;
         float height_coef;
+        int width, height;
 
         enum TextureType { WATER, SAND, GRASS, ROCK, SNOW }
 
-        public TerrainVisibleSection(int width, int height, float[,] height_map, List<Texture> textures, int x_start = 0, int y_start = 0)
+        public TerrainVisibleSection(int width, int height, float[,] height_map, List<Texture> textures)
         {
-            Vertices.Clear();
-            Polygons.Clear();
+            this.width = width;
+            this.height = height;
 
             float topLeftX = (width - 1) / 2f;
             float topLeftZ = (height - 1) / 2f;
@@ -86,10 +93,10 @@ namespace RenderLib
 
             height_coef = 3f * (float)Math.Sqrt(2 * width * height);
 
-            for (int y = y_start; y < height; y++)
-                for (int x = x_start; x < width; x++)
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
                 {
-                    Vertices.Add(new Vertex((x - topLeftX) * 10f, height_map[x, y] * height_coef, (y - topLeftZ) * 10f, (float)x / width, (float)y / height));
+                    Vertices.Add(new Vertex((x - topLeftX) * 10f, height_map[x, y] * height_coef, (y - topLeftZ) * 10f, (float)x / width * 3f, (float)y / height * 3f));
 
                     if (x < width - 1 && y < height - 1)
                     {
@@ -105,6 +112,28 @@ namespace RenderLib
 
             RecalcNormals();
             RecalcAdjPols();
+            CorrectNormals();
+            SetPolsTextures();
+        }
+
+        public void TerrainUpdate(float[,] height_map, int start_x, int start_y, Vector3 scale_coefs)
+        {
+            Vertices.Clear();
+            pols_texture_types.Clear();
+
+            float topLeftX = (width - 1) / 2f;
+            float topLeftZ = (height - 1) / 2f;
+
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                    Vertices.Add(new Vertex((x - topLeftX) * 10f, height_map[x + start_x, y + start_y] * height_coef, (y - topLeftZ) * 10f, (float)x / width * 3f, (float)y / height * 3f));
+
+
+            if (!(MathAddon.IsEqual(scale_coefs.X, 1) && MathAddon.IsEqual(scale_coefs.Y, 1) && MathAddon.IsEqual(scale_coefs.Z, 1)))
+                Scale(scale_coefs.X, scale_coefs.Y, scale_coefs.Z);
+
+            RecalcAdjPols();
+            RecalcNormals();
             CorrectNormals();
             SetPolsTextures();
         }

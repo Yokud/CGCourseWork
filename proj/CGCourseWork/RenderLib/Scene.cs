@@ -20,5 +20,26 @@ namespace RenderLib
         }
 
         public List<Object3D> Objects => new List<Object3D>() { Terrain.VisibleTerrainModel, Camera, LightSource };
+
+
+        public void RotateTerrain(float angle, Axis axis)
+        {
+            Terrain.Rotate(angle, axis);
+        }
+
+        public void ScaleTerrain(float kx, float ky, float kz)
+        {
+            Terrain.Scale(kx, ky, kz);
+        }
+
+        public void MoveTerrainLimits(int dx, int dz)
+        {
+            Terrain.Move(dx, dz);
+        }
+
+        //public void RotateLight(float angle, Axis axis)
+        //{
+        //    LightSource.RotateAt();
+        //}
     }
 }

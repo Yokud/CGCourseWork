@@ -8,8 +8,8 @@ namespace RenderLib
 {
     public class Facade
     {
-        public Scene Scene { get; private set; }
-        public Drawer Drawer { get; private set; }
+        Scene Scene { get; set; }
+        Drawer Drawer { get; set; }
 
         public Facade(Scene scene, Drawer drawer)
         {
@@ -21,6 +21,21 @@ namespace RenderLib
         {
             Drawer.DrawScene(Scene);
             return Drawer.FrameBuffer;
+        }
+
+        public void RotateTerrain(float angle, Axis axis)
+        {
+            Scene.RotateTerrain(angle, axis);
+        }
+
+        public void ScaleTerrain(float kx, float ky, float kz)
+        {
+            Scene.ScaleTerrain(kx, ky, kz);
+        }
+
+        public void MoveTerrain(int dx, int dz)
+        {
+            Scene.MoveTerrainLimits(dx, dz);
         }
     }
 }

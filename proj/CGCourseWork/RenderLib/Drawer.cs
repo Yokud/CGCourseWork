@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Numerics;
 using System.Drawing;
+using System.Diagnostics;
 
 
 namespace RenderLib
@@ -32,7 +33,7 @@ namespace RenderLib
         {
             var pols = VerticesShading(scene);
 
-            // тут ещё нужны этапы: растеризация, наложение текстур и теневой карты
+            // тут ещё нужны этапы: наложение теневой карты
             PixelShading(pols, scene.Camera, scene.LightSource);
 
             ZBuffer(pols);
@@ -239,19 +240,16 @@ namespace RenderLib
         {
             Dictionary<int, SegmentX> outline = new Dictionary<int, SegmentX>();
 
-            Parallel.ForEach(points, point =>
-            {
-                lock (lock_obj)
+            foreach (var point in points)
+            { 
+                if (!outline.ContainsKey(point.Y))
+                    outline.Add(point.Y, new SegmentX(point.X, point.X));
+                else
                 {
-                    if (!outline.ContainsKey(point.Y))
-                        outline.Add(point.Y, new SegmentX(point.X, point.X));
-                    else
-                    {
-                        outline[point.Y].MinX = Math.Min(outline[point.Y].MinX, point.X);
-                        outline[point.Y].MaxX = Math.Max(outline[point.Y].MaxX, point.X);
-                    }
+                    outline[point.Y].MinX = Math.Min(outline[point.Y].MinX, point.X);
+                    outline[point.Y].MaxX = Math.Max(outline[point.Y].MaxX, point.X);
                 }
-            });
+            }
 
             return outline;
         }

@@ -30,41 +30,25 @@ namespace UI
             InitializeComponent();
 
             Vector3 center = new Vector3(0, 0, 0);
-            float sideLen = 100;
-            var d = sideLen / 2;
-            List<Vertex> Vertices = new List<Vertex>()
-                {
-                    new Vertex(new Vector3(center.X - d, center.Y - d, center.Z), new Vector2(0, 0)),
-                    new Vertex(new Vector3(center.X - d, center.Y + d, center.Z), new Vector2(0, 1)),
-                    new Vertex(new Vector3(center.X + d, center.Y - d, center.Z), new Vector2(1, 0)),
-                    new Vertex(new Vector3(center.X + d, center.Y + d, center.Z), new Vector2(1, 1)),
-                };
-
-            List<RenderLib.Polygon> Indexes = new List<RenderLib.Polygon>()
-                {
-                    new RenderLib.Polygon(0, 1, 2),
-                    new RenderLib.Polygon(3, 2, 1),
-                };
 
             Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
             cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
 
             DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 100), Vector3.Normalize(new Vector3(0, -50, -100)));
 
-            List<Texture> textures = new List<Texture>() {new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
-                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
-                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
-                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
-                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
+            List<Texture> textures = new List<Texture>() {new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
+                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
+                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
+                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
+                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
             Terrain terr = new Terrain(300, 300, 64, 64, textures);
-
-            //terr.Rotate((float)Math.PI / 4, Axis.Y);
-            //terr.Scale(1.5f, 1, 1.5f);
-            //terr.Move(30, 30);
 
             Scene scene = new Scene(terr, cam, light);
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
             Facade fac = new Facade(scene, draw);
+
+            fac.RotateTerrain((float)Math.PI / 4, Axis.Y);
+            fac.MoveTerrain(10, 10);
 
             MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
         }
