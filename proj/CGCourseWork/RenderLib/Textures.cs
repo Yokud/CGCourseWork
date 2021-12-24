@@ -120,11 +120,19 @@ namespace RenderLib
             MipLevels = new List<Texture>(textures);
         }
 
-        public int GetMipLevel(int x_min, int x_max, int y_min, int y_max)
+        public MipMap(Texture texture)
+        {
+            MipLevels = new List<Texture>();
+            MipLevels.Add(texture);
+        }
+
+        public Texture GetMipLevel(int x_min, int x_max, int y_min, int y_max)
         {
             int result = MipLevels.Count - (int)Math.Ceiling(Math.Log((x_max - x_min) * (y_max - y_min), 4));
 
-            return result < 0 ? 0 : result;
+            result = result < 0 ? 0 : result;
+
+            return MipLevels[result];
         }
     }
 }

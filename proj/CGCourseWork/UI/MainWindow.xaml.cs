@@ -54,7 +54,11 @@ namespace UI
 
             DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 100), Vector3.Normalize(new Vector3(0, -50, -100)));
 
-            Terrain terr = new Terrain(300, 300, 64, 64);
+            MipMap[] maps = new MipMap[4] {new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg")),
+                                            new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\sand.jpg")),
+                                            new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\rock.jpg")),
+                                            new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\snow.jpg"))};
+            Terrain terr = new Terrain(300, 300, 64, 64, maps);
 
             Scene scene = new Scene(terr, cam, light);
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);

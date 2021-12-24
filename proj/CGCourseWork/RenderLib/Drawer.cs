@@ -67,11 +67,24 @@ namespace RenderLib
                 {
                     visible_pols.Add(new PolygonInfo(vertices[pol[0]], vertices[pol[1]], vertices[pol[2]], scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
 
+                    Vector3[] v_projs = new Vector3[3];
+
                     for (int i = 0; i < 3; i++)
                     {
                         visible_pols[visible_pols.Count - 1].Ws[i] = ws[pol[i]];
                         visible_pols[visible_pols.Count - 1].LightLevelsOnVertices[i] = light_levels[pol[i]];
+                        v_projs[i] = scene.Camera.ScreenProjection(vertices[pol[i]].Position);
                     }
+
+                    int x_min, x_max, y_min, y_max;
+
+                    x_min = MathAddon.Min3(v_projs[0].X, v_projs[1].X, v_projs[2].X);
+                    x_max = MathAddon.Max3(v_projs[0].X, v_projs[1].X, v_projs[2].X);
+                    y_min = MathAddon.Min3(v_projs[0].Y, v_projs[1].Y, v_projs[2].Y);
+                    y_max = MathAddon.Max3(v_projs[0].Y, v_projs[1].Y, v_projs[2].Y);
+
+
+                    visible_pols[visible_pols.Count - 1].Texture = scene.Terrain.VisibleTerrainModel.GetMipMap(pol).GetMipLevel(x_min, x_max, y_min, y_max);
                 }
             }
 

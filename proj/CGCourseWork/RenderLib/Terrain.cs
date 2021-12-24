@@ -18,12 +18,13 @@ namespace RenderLib
         float scale_coef_x, scale_coef_y, scale_coef_z;
 
 
-        public Terrain(int width, int height, int vis_width, int vis_height) : this(new HeightMap(width, height, new PerlinNoise(12)), vis_width, vis_height)
-        {
+        public Terrain(int width, int height, int vis_width, int vis_height, MipMap[] mip_maps) : this(new HeightMap(width, height, 
+                                                                                                        new PerlinNoise(Math.Max(vis_width, vis_height) / 3, 4)), 
+                                                                                                        vis_width, vis_height, 
+                                                                                                        mip_maps)
+        { }
 
-        }
-
-        public Terrain(HeightMap map, int vis_width, int vis_height)
+        public Terrain(HeightMap map, int vis_width, int vis_height, MipMap[] mip_maps)
         {
             this.map = map;
             t_vis_width = vis_width;
@@ -34,10 +35,10 @@ namespace RenderLib
             rot_coef_x = rot_coef_y = rot_coef_z = 0;
             scale_coef_x = scale_coef_y = scale_coef_z = 0;
 
-            map.SaveToBmp(@"D:\Repos\CGCourseWork\proj\CGCourseWork\RenderLib\heightmaps\", "test");
+            //map.SaveToBmp(@"D:\Repos\CGCourseWork\proj\CGCourseWork\RenderLib\heightmaps\", "test");
             map.Normalize();
 
-            terrain_model = new TerrainVisibleSection(vis_width, vis_height, map.NoiseMap);
+            terrain_model = new TerrainVisibleSection(vis_width, vis_height, map.NoiseMap, mip_maps);
         }
 
         internal TerrainVisibleSection VisibleTerrainModel => terrain_model;
@@ -46,14 +47,18 @@ namespace RenderLib
     internal class TerrainVisibleSection : PolModel
     {
         MipMap[] land_textures;
+        List<MipMapType> pols_mip_map;
+        float height_coef;
 
-        public TerrainVisibleSection(int width, int height, float[,] height_map)
+        enum MipMapType { WATER, SAND, GROUND, SNOW }
+
+        public TerrainVisibleSection(int width, int height, float[,] height_map, MipMap[] mip_maps)
         {
             float topLeftX = (width - 1) / 2f;
             float topLeftZ = (height - 1) / 2f;
             int vert_index = 0;
 
-            float height_coef = 3f * (float)Math.Sqrt(2 * width * height);
+            height_coef = 3f * (float)Math.Sqrt(2 * width * height);
 
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
@@ -69,9 +74,13 @@ namespace RenderLib
                     vert_index++;
                 }
 
+            land_textures = mip_maps;
+            pols_mip_map = new List<MipMapType>();
+
             RecalcNormals();
             RecalcAdjPols();
             CorrectNormals();
+            SetPolsMipMap();
         }
 
         private void CorrectNormals()
@@ -83,6 +92,30 @@ namespace RenderLib
                     Normals[i] *= mult;
 
             RecalcVertexNormals();
+        }
+
+        private void SetPolsMipMap()
+        {
+            foreach (var pol in Polygons)
+            {
+                float avg_height = (Vertices[pol[0]].Position.Y + Vertices[pol[1]].Position.Y + Vertices[pol[2]].Position.Y) / 3f;
+
+                if (avg_height < 0.2 * height_coef)
+                    pols_mip_map.Add(MipMapType.WATER);
+                else if (avg_height < 0.3 * height_coef)
+                    pols_mip_map.Add(MipMapType.SAND);
+                else if (avg_height < 0.8 * height_coef)
+                    pols_mip_map.Add(MipMapType.GROUND);
+                else
+                    pols_mip_map.Add(MipMapType.SNOW);
+            }
+        }
+
+        public MipMap GetMipMap(Polygon pol)
+        {
+            int i = Polygons.IndexOf(pol);
+
+            return land_textures[(int)pols_mip_map[i]];
         }
     }
 }
