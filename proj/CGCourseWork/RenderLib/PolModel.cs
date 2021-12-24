@@ -82,6 +82,7 @@ namespace RenderLib
 
         protected void RecalcNormals()
         {
+            Normals.Clear();
             foreach (var pol in Polygons)
             {
                 Vector3 a = Vertices[pol.Vertices[2]].Position - Vertices[pol.Vertices[0]].Position;

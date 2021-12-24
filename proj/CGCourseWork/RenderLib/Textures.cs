@@ -110,29 +110,4 @@ namespace RenderLib
             return Texels.GetPixel(x_texel, y_texel);
         }
     }
-
-    public class MipMap
-    {
-        public List<Texture> MipLevels { get; protected set; }
-
-        public MipMap(List<Texture> textures)
-        {
-            MipLevels = new List<Texture>(textures);
-        }
-
-        public MipMap(Texture texture)
-        {
-            MipLevels = new List<Texture>();
-            MipLevels.Add(texture);
-        }
-
-        public Texture GetMipLevel(int x_min, int x_max, int y_min, int y_max)
-        {
-            int result = MipLevels.Count - (int)Math.Ceiling(Math.Log((x_max - x_min) * (y_max - y_min), 4));
-
-            result = result < 0 ? 0 : result;
-
-            return MipLevels[result];
-        }
-    }
 }

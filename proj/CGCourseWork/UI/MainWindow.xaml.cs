@@ -46,19 +46,21 @@ namespace UI
                     new RenderLib.Polygon(3, 2, 1),
                 };
 
-            PolModel model = new PolModel(Vertices, Indexes, Pivot.BasePivot(center));
-            //model.Rotate((float)Math.PI * 17f / 36f, Axis.Y);
-
-            Camera cam = new Camera(Pivot.BasePivot(0, 40, 600), 512, 512, 10, 1000);
+            Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
             cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
 
             DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 100), Vector3.Normalize(new Vector3(0, -50, -100)));
 
-            MipMap[] maps = new MipMap[4] {new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg")),
-                                            new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\sand.jpg")),
-                                            new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\rock.jpg")),
-                                            new MipMap(new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\snow.jpg"))};
-            Terrain terr = new Terrain(300, 300, 64, 64, maps);
+            List<Texture> textures = new List<Texture>() {new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
+                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
+                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
+                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
+                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
+            Terrain terr = new Terrain(300, 300, 64, 64, textures);
+
+            //terr.Rotate((float)Math.PI / 4, Axis.Y);
+            //terr.Scale(1.5f, 1, 1.5f);
+            //terr.Move(30, 30);
 
             Scene scene = new Scene(terr, cam, light);
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
