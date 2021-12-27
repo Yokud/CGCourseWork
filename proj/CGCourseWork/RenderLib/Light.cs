@@ -124,5 +124,10 @@ namespace RenderLib
         {
             return;
         }
+
+        public void SetPivot(Pivot p)
+        {
+            Pivot = new Pivot(p);
+        }
     }
 }

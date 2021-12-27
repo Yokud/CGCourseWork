@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UI"
         mc:Ignorable="d"
-        Title="CGCourseWork" MinHeight="450" MinWidth="900" WindowStyle="SingleBorderWindow" Height="417.367" Width="835.237">
+        Title="CGCourseWork" MinHeight="470" MinWidth="900" WindowStyle="SingleBorderWindow" Height="470.089" Width="835.237">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="380*"></ColumnDefinition>
@@ -38,9 +38,9 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="0.285*"/>
-                <RowDefinition Height="0.25*"/>
-                <RowDefinition Height="0.25*"/>
-                <RowDefinition Height="0.215*"/>
+                <RowDefinition Height="0.24*"/>
+                <RowDefinition Height="0.235*"/>
+                <RowDefinition Height="0.252*"/>
             </Grid.RowDefinitions>
 
             <GroupBox Name="HeightmapMenu" Header="Выбор карты высот" Margin="5" MinWidth="75" Grid.Column="0" Grid.Row="0">
@@ -88,15 +88,15 @@
 
                     <DockPanel Name="DeltaX" Grid.Row="0" Grid.Column="0">
                         <Label Content="X:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
+                        <TextBox Name="DeltaX_textbox" Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
                     </DockPanel>
 
                     <DockPanel Name="DeltaY" Grid.Row="0" Grid.Column="1">
                         <Label Content="Y:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
+                        <TextBox Name="DeltaY_textbox" Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
                     </DockPanel>
 
-                    <Button Name="ChangeAccept" Content="Применить" Grid.Row="1" Grid.ColumnSpan="2" Margin="40, 2.5, 40, 2.5"/>
+                    <Button Name="ChangeAccept" Content="Применить" Grid.Row="1" Grid.ColumnSpan="2" Margin="40, 2.5, 40, 2.5" Click="ChangeAccept_Click"/>
                 </Grid>
             </GroupBox>
 
@@ -109,10 +109,10 @@
 
                     <DockPanel Name="DeltaAngle" Grid.Row="0">
                         <Label Content="Угол (в градусах):" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
+                        <TextBox Name="DeltaAngle_textbox" Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
                     </DockPanel>
 
-                    <Button Name="RotateAccept" Content="Применить" Grid.Row="1" Margin="40, 2.5, 40, 2.5"/>
+                    <Button Name="RotateAccept" Content="Применить" Grid.Row="1" Margin="40, 2.5, 40, 2.5" Click="RotateAccept_Click"/>
                 </Grid>
             </GroupBox>
 
@@ -130,20 +130,20 @@
 
                     <DockPanel Name="ScaleX" Grid.Row="0" Grid.Column="0">
                         <Label Content="X:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
+                        <TextBox Name="ScaleX_textbox" Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
                     </DockPanel>
 
                     <DockPanel Name="ScaleY" Grid.Row="0" Grid.Column="1">
                         <Label Content="Y:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
+                        <TextBox Name="ScaleY_textbox" Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
                     </DockPanel>
 
                     <DockPanel Name="ScaleZ" Grid.Row="0" Grid.Column="2">
                         <Label Content="Z:" Margin="2, 6, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <TextBox Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
+                        <TextBox Name="ScaleZ_textbox" Margin="2,10,5,10" MinWidth="60" MaxLength="8"/>
                     </DockPanel>
 
-                    <Button Name="ScaleAccept" Content="Применить" Grid.Row="1" Grid.Column="1" Margin="10, 2.5, 10, 2.5"/>
+                    <Button Name="ScaleAccept" Content="Применить" Grid.Row="1" Grid.Column="1" Margin="10, 2.5, 10, 2.5" Click="ScaleAccept_Click"/>
                 </Grid>
             </GroupBox>
 
@@ -152,18 +152,34 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <DockPanel Name="RotateTheta" Grid.Row="0" VerticalAlignment="Center" Margin="2">
+                    <DockPanel Name="RotateX" Grid.Row="0" VerticalAlignment="Center" Margin="2">
                         <TextBox Text="{Binding ElementName=slValue1, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                        <Label Content="  Зенит:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <Slider Name="slValue1" Orientation="Horizontal" Margin="0, 3, 5, 0" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        <Label Content="  X:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
+                        <Slider Name="slValue1" Orientation="Horizontal" Margin="0, 3, 5, 0" Value="70" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True" 
+                                ValueChanged="slValue1_ValueChanged"
+                                Thumb.DragStarted="slValue1_DragStarted"
+                                Thumb.DragCompleted="slValue1_DragCompleted"/>
                     </DockPanel>
 
-                    <DockPanel Name="RotatePhi" Grid.Row="1" VerticalAlignment="Center" Margin="2">
-                        <Label Content="Азимут:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
+                    <DockPanel Name="RotateY" Grid.Row="1" VerticalAlignment="Center" Margin="2">
+                        <Label Content="  Y:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Text="{Binding ElementName=slValue2, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                        <Slider Name="slValue2" Orientation="Horizontal" Margin="0, 3, 5, 0" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        <Slider Name="slValue2" Orientation="Horizontal" Margin="0, 3, 5, 0" Value="90" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="slValue2_ValueChanged"
+                                Thumb.DragStarted="slValue2_DragStarted"
+                                Thumb.DragCompleted="slValue2_DragCompleted"/>
+                    </DockPanel>
+
+                    <DockPanel Name="RotateZ" Grid.Row="2" VerticalAlignment="Center" Margin="2">
+                        <Label Content="  Z:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
+                        <TextBox Text="{Binding ElementName=slValue3, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
+                        <Slider Name="slValue3" Orientation="Horizontal" Margin="0, 3, 5, 0" Value="110" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
+                                ValueChanged="slValue3_ValueChanged"
+                                Thumb.DragStarted="slValue3_DragStarted"
+                                Thumb.DragCompleted="slValue3_DragCompleted"/>
                     </DockPanel>
                 </Grid>
             </GroupBox>

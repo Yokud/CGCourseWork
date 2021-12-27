@@ -46,8 +46,8 @@ namespace UI
                     throw new Exception("Высота карты не может быть меньше или равно нулю!");
 
                 Scale = int.Parse(Scale_textbox.Text);
-                if (Scale <= 0)
-                    throw new Exception("Масштаб карты не может быть меньше или равно нулю!");
+                if (Scale <= 0 || Scale > MapWidth || Scale > MapHeight)
+                    throw new Exception("Масштаб карты может быть больше нуля и меньше сторон карты высот!");
 
                 if (oct = Octs_textbox.Text != string.Empty)
                 {

@@ -78,7 +78,7 @@ namespace RenderLib
                 v.Transform(model_view_matr, out float w);
                 ws.Add(w);
                 light_levels.Add(light_level);
-            }            
+            }
 
             foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
             {
@@ -228,11 +228,6 @@ namespace RenderLib
 
         private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, DirectionalLight light)
         {
-            //for (int i = 0; i < width; i++)
-            //    for (int j = 0; j < height; j++)
-            //        FrameBuffer.SetPixel(i, j, shadow_drawer.FrameBuffer.GetPixel(i, j));
-            //return;
-
             // Удаление невидимых линий и поверхностей
             FrameBuffer.Clear();
             for (int i = 0; i < width; i++)

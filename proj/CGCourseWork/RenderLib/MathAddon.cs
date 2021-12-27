@@ -10,7 +10,7 @@ namespace RenderLib
 {
     public enum Axis { X, Y, Z }
 
-    static class MathAddon
+    public static class MathAddon
     {
         /// <summary>
         /// Угол между векторами
@@ -171,6 +171,11 @@ namespace RenderLib
         public static Vector2 InBaricentric(Vector3 bar, Vector2 v1, Vector2 v2, Vector2 v3)
         {
             return bar.X * v1 + bar.Y * v2 + bar.Z * v3;
+        }
+
+        public static float DegToRad(float deg)
+        {
+            return deg * (float)Math.PI / 180f;
         }
     }
 }

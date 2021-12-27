@@ -29,10 +29,6 @@ namespace RenderLib
         {
             this.map = map;
 
-            //Filter island_filter = new Filter(map.Width, map.Height);
-            //island_filter.Calculate((x, y) => 100 * 100 - ((x - map.Width / 2f) * (x - map.Width / 2f) + (y - map.Height / 2f) * (y - map.Height / 2f)) > 0 ? 100 * 100 - ((x - map.Width / 2f) * (x - map.Width / 2f) + (y - map.Height / 2f) * (y - map.Height / 2f)) : 0);
-            //this.map.AddFilter(island_filter);
-
             t_vis_width = vis_width;
             t_vis_height = vis_height;
 
@@ -40,7 +36,6 @@ namespace RenderLib
 
             scale_coefs = new Vector3(1, 1, 1);
 
-            map.SaveToBmp(@"D:\Repos\CGCourseWork\proj\CGCourseWork\heightmaps\", "test");
             map.Normalize();
 
             land_textures = textures;
@@ -91,7 +86,7 @@ namespace RenderLib
             float topLeftZ = (height - 1) / 2f;
             int vert_index = 0;
 
-            height_coef = 3f * (float)Math.Sqrt(2 * width * height);
+            height_coef = (float)Math.Sqrt(height_map.GetLength(0) * height_map.GetLength(1));
 
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)

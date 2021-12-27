@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -29,7 +30,15 @@ namespace UI
         List<Texture> textures;
         Facade fac;
         Vector3 Center;
-        HeightMap map;
+        public HeightMap Map { get; private set; }
+        int visWidth, visHeight;
+
+        double rot_dx = 0, rot_dy = 0, rot_dz = 0;
+        private bool dragStarted1 = false;
+        private bool dragStarted2 = false;
+        private bool dragStarted3 = false;
+
+        CultureInfo ci;
 
         public MainWindow()
         {
@@ -37,29 +46,14 @@ namespace UI
 
             Center = new Vector3(0, 0, 0);
 
-            //Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
-            //cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
-
-            //DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 600), new Vector3(0, 0, -1));
-            //light.RotateAt(center, -(float)Math.PI / 4, Axis.X);
-            //light.RotateAt(center, -(float)Math.PI / 2, Axis.Y);
-            //light.RotateAt(center, (float)Math.PI / 2, Axis.Y);
-
             textures = new List<Texture>() {new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
-            //Terrain terr = new Terrain(300, 300, 64, 64, textures);
 
-            //Scene scene = new Scene(terr, cam, light);
-            //Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
-            //fac = new Facade(scene, draw);
-
-            //fac.RotateTerrain((float)Math.PI / 2, Axis.Y);
-            //fac.MoveTerrain(10, 10);
-
-            //MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+            ci.NumberFormat.CurrencyDecimalSeparator = ".";
         }
 
         private void Generate_Click(object sender, RoutedEventArgs e)
@@ -81,14 +75,174 @@ namespace UI
                 if (mapWindow.pers)
                     pers = mapWindow.Persistence;
 
-                map = new HeightMap(mapWindow.MapWidth, mapWindow.MapHeight, new PerlinNoise(mapWindow.Scale, octs, lacun, pers, seed));
+                Map = new HeightMap(mapWindow.MapWidth, mapWindow.MapHeight, new PerlinNoise(mapWindow.Scale, octs, lacun, pers, seed));
                 StateText.Text = $"Карта высот была сгенерирована с параметрами: {mapWindow.MapWidth} {mapWindow.MapHeight} {mapWindow.Scale} {3} {octs} {lacun} {pers} {seed}";
             }
         }
 
+        private void ChangeAccept_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int dx = int.Parse(DeltaX_textbox.Text);
+                int dy = int.Parse(DeltaY_textbox.Text);
+
+                fac.MoveTerrain(dx, dy);
+
+                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message);
+            }
+        }
+
+        private void RotateAccept_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int d_angle = int.Parse(DeltaAngle_textbox.Text);
+
+                fac.RotateTerrain(MathAddon.DegToRad(d_angle), Axis.Y);
+
+                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message);
+            }
+        }
+
+        private void ScaleAccept_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                float kx = float.Parse(ScaleX_textbox.Text, NumberStyles.Any, ci);
+                float ky = float.Parse(ScaleY_textbox.Text, NumberStyles.Any, ci);
+                float kz = float.Parse(ScaleZ_textbox.Text, NumberStyles.Any, ci);
+
+                fac.ScaleTerrain(kx, ky, kz);
+
+                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message);
+            }
+        }
+
+        private void slValue1_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            dragStarted1 = true;
+        }
+
+        private void slValue1_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            fac.RotateLight(MathAddon.DegToRad((float)(slValue1.Value - rot_dx)), Axis.X);
+            rot_dx = slValue1.Value;
+
+            dragStarted1 = false;
+
+            MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+        }
+
+        private void slValue2_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            dragStarted2 = true;
+        }
+
+        private void slValue2_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            fac.RotateLight(MathAddon.DegToRad((float)(slValue2.Value - rot_dy)), Axis.Y);
+            rot_dy = slValue2.Value;
+
+            dragStarted2 = false;
+
+            MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+        }
+
+        private void slValue1_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!dragStarted1 && RotateLightSourse.IsEnabled)
+            {
+                fac.RotateLight(MathAddon.DegToRad((float)(slValue1.Value - rot_dx)), Axis.X);
+                rot_dx = slValue1.Value;
+                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            }
+        }
+
+        private void slValue2_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!dragStarted2 && RotateLightSourse.IsEnabled)
+            {
+                fac.RotateLight(MathAddon.DegToRad((float)(slValue2.Value - rot_dy)), Axis.Y);
+                rot_dy = slValue2.Value;
+                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            }
+        }
+
+        private void slValue3_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!dragStarted3 && RotateLightSourse.IsEnabled)
+            {
+                fac.RotateLight(MathAddon.DegToRad((float)(slValue3.Value - rot_dz)), Axis.Z);
+                rot_dz = slValue3.Value;
+                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            }
+        }
+
+        private void slValue3_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            dragStarted3 = true;
+        }
+
+        private void slValue3_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            fac.RotateLight(MathAddon.DegToRad((float)(slValue3.Value - rot_dz)), Axis.Z);
+            rot_dz = slValue3.Value;
+
+            dragStarted3 = false;
+
+            MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+        }
+
         private void CreateLand_Click(object sender, RoutedEventArgs e)
         {
+            SetLimitWindow limWindow = new SetLimitWindow();
 
+            limWindow.Owner = this;
+
+            if (limWindow.ShowDialog() == true)
+            {
+                visWidth = limWindow.VisWidth;
+                visHeight = limWindow.VisHeight;
+                StateText.Text += $" {visWidth} {visHeight}";
+
+
+                Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
+                cam.RotateAt(Center, -(float)Math.PI / 4, Axis.X);
+
+                DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 0, 700), new Vector3(0, 0, -1));
+
+                Terrain terr = new Terrain(Map, visWidth, visHeight, textures);
+
+                Scene scene = new Scene(terr, cam, light);
+                Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
+                fac = new Facade(scene, draw);
+                fac.RotateLight(MathAddon.DegToRad((float)slValue1.Value), Axis.X);
+                fac.RotateLight(MathAddon.DegToRad((float)slValue2.Value), Axis.Y);
+                fac.RotateLight(MathAddon.DegToRad((float)slValue3.Value), Axis.Z);
+                rot_dx = slValue1.Value;
+                rot_dy = slValue2.Value;
+                rot_dz = slValue3.Value;
+
+                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+
+                ChangeTerrainView.IsEnabled = true;
+                RotateTerrainView.IsEnabled = true;
+                ScaleTerrainView.IsEnabled = true;
+                RotateLightSourse.IsEnabled = true;
+            }
         }
     }
 
