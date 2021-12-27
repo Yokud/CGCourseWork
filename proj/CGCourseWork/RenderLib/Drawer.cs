@@ -33,28 +33,20 @@ namespace RenderLib
             lock_obj = new object();
         }
 
-        public void DrawScene(Scene scene)
+        public void DrawScene(Scene scene, bool shadows = true)
         {
-            // Создание теневой карты
-            shadow_drawer = new Drawer(width, height);
-            Camera light_camera = new Camera(new Pivot(scene.LightSource.Pivot), scene.Camera.ScreenWidth, scene.Camera.ScreenHeight, scene.Camera.ScreenNearDist, scene.Camera.ScreenFarDist);
-            shadow_drawer.DrawShadowScene(new Scene(scene.Terrain, light_camera, scene.LightSource));
-            ShadowBuffer = (float[,])shadow_drawer.DepthBuffer.Clone();
-
+            if (shadows)
+            {
+                // Создание теневой карты
+                shadow_drawer = new Drawer(width, height);
+                Camera light_camera = new Camera(new Pivot(scene.LightSource.Pivot), scene.Camera.ScreenWidth, scene.Camera.ScreenHeight, scene.Camera.ScreenNearDist, scene.Camera.ScreenFarDist);
+                shadow_drawer.DrawScene(new Scene(scene.Terrain, light_camera, scene.LightSource), false);
+                ShadowBuffer = (float[,])shadow_drawer.DepthBuffer.Clone();
+            }
 
             var pols = VerticesShading(scene);
-
             PixelShading(pols, scene.Camera, scene.LightSource);
-
-            ZBufferShadow(pols, scene.Camera, scene.LightSource);
-        }
-
-        private void DrawShadowScene(Scene scene)
-        {
-            var pols = VerticesShading(scene);
-
-            PixelShading(pols, scene.Camera, scene.LightSource);
-            ZBuffer(pols);
+            ZBufferShadow(pols, scene.Camera, scene.LightSource, shadows);
         }
 
         private List<PolygonInfo> VerticesShading(Scene scene)
@@ -205,28 +197,7 @@ namespace RenderLib
             }
         }
 
-        private void ZBuffer(List<PolygonInfo> pols)
-        {
-            FrameBuffer.Clear();
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
-                    DepthBuffer[i, j] = float.PositiveInfinity;
-
-            Parallel.ForEach(pols, p =>
-            {
-                foreach (var pixel in p.Pixels)
-                {
-                    if (pixel.Position.Z < DepthBuffer[(int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y])
-                    {
-                        DepthBuffer[(int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y] = pixel.Position.Z;
-
-                        FrameBuffer.SetPixel((int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y, pixel.Color);
-                    }
-                }
-            });
-        }
-
-        private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, DirectionalLight light)
+        private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, DirectionalLight light, bool shadows = true)
         {
             // Удаление невидимых линий и поверхностей
             FrameBuffer.Clear();
@@ -234,9 +205,14 @@ namespace RenderLib
                 for (int j = 0; j < height; j++)
                     DepthBuffer[i, j] = float.PositiveInfinity;
 
-            Camera shadow_camera = new Camera(light.Pivot, cam.ScreenWidth, cam.ScreenHeight, cam.ScreenNearDist, cam.ScreenFarDist);
-            Matrix4x4 cam_to_light_matr = cam.Pivot.GlobalCoordsMatrix * Matrix4x4.CreateTranslation(cam.Pivot.Center - shadow_camera.Pivot.Center) * shadow_camera.Pivot.LocalCoordsMatrix; 
-            //Stopwatch sw = Stopwatch.StartNew();
+            Camera shadow_camera = null;
+            Matrix4x4 cam_to_light_matr = Matrix4x4.Identity;
+            if (shadows)
+            {
+                shadow_camera = new Camera(light.Pivot, cam.ScreenWidth, cam.ScreenHeight, cam.ScreenNearDist, cam.ScreenFarDist);
+                cam_to_light_matr = cam.Pivot.GlobalCoordsMatrix * Matrix4x4.CreateTranslation(cam.Pivot.Center - shadow_camera.Pivot.Center) * shadow_camera.Pivot.LocalCoordsMatrix;
+            }
+
             Parallel.ForEach(pols, p => 
             {
                 foreach (var pixel in p.Pixels)
@@ -245,21 +221,22 @@ namespace RenderLib
                     {
                         DepthBuffer[(int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y] = pixel.Position.Z;
 
-                        var pixel_loc = Vector3.Transform(pixel.Position, cam_to_light_matr);
-                        var pixel_persp = pixel_loc.Transform(shadow_camera.PerspectiveClip);
-                        var scr_proj = shadow_camera.ToScreenProjection(pixel_persp).ToPoint();
+                        if (shadows)
+                        {
+                            var pixel_loc = Vector3.Transform(pixel.Position, cam_to_light_matr);
+                            var pixel_persp = pixel_loc.Transform(shadow_camera.PerspectiveClip);
+                            var scr_proj = shadow_camera.ToScreenProjection(pixel_persp).ToPoint();
 
-                        if (scr_proj.X < 0 || scr_proj.X >= width || scr_proj.Y < 0 || scr_proj.Y >= height)
-                            pixel.Color = light.GetColorByIntensity(pixel.Color, 0.7f);
-                        else if (pixel_loc.Z > ShadowBuffer[scr_proj.X, scr_proj.Y] + 3f || ShadowBuffer[scr_proj.X, scr_proj.Y] == float.PositiveInfinity)
-                            pixel.Color = light.GetColorByIntensity(pixel.Color, 0.7f);
+                            if (scr_proj.X < 0 || scr_proj.X >= width || scr_proj.Y < 0 || scr_proj.Y >= height)
+                                pixel.Color = light.GetColorByIntensity(pixel.Color, 0.7f);
+                            else if (pixel_loc.Z > ShadowBuffer[scr_proj.X, scr_proj.Y] + 3f || ShadowBuffer[scr_proj.X, scr_proj.Y] == float.PositiveInfinity)
+                                pixel.Color = light.GetColorByIntensity(pixel.Color, 0.7f);
+                        }
 
                         FrameBuffer.SetPixel((int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y, pixel.Color);
                     }
                 }
             });
-
-            //Console.WriteLine(sw.ElapsedTicks / (Environment.ProcessorCount - 1));
         }
 
         private List<Point> Brezenhem(int x_start, int y_start, int x_end, int y_end)
