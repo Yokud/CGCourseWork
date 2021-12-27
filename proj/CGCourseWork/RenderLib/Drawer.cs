@@ -18,6 +18,9 @@ namespace RenderLib
         int width, height;
         public FastBitmap FrameBuffer { get; private set; }
         public float[,] DepthBuffer { get; private set; }
+        public float[,] ShadowBuffer { get; private set; }
+
+        Drawer shadow_drawer;
 
         public Drawer(int width, int height)
         {
@@ -25,26 +28,41 @@ namespace RenderLib
             this.height = height;
             FrameBuffer = new FastBitmap(width, height);
             DepthBuffer = new float[width, height];
+            ShadowBuffer = new float[width, height];
 
             lock_obj = new object();
         }
 
         public void DrawScene(Scene scene)
         {
+            // Создание теневой карты
+            shadow_drawer = new Drawer(width, height);
+            Camera light_camera = new Camera(new Pivot(scene.LightSource.Pivot), scene.Camera.ScreenWidth, scene.Camera.ScreenHeight, scene.Camera.ScreenNearDist, scene.Camera.ScreenFarDist);
+            shadow_drawer.DrawShadowScene(new Scene(scene.Terrain, light_camera, scene.LightSource));
+            ShadowBuffer = (float[,])shadow_drawer.DepthBuffer.Clone();
+
+
             var pols = VerticesShading(scene);
 
-            // тут ещё нужны этапы: наложение теневой карты
             PixelShading(pols, scene.Camera, scene.LightSource);
 
+            ZBufferShadow(pols, scene.Camera, scene.LightSource);
+        }
+
+        private void DrawShadowScene(Scene scene)
+        {
+            var pols = VerticesShading(scene);
+
+            PixelShading(pols, scene.Camera, scene.LightSource);
             ZBuffer(pols);
         }
 
         private List<PolygonInfo> VerticesShading(Scene scene)
         {
             var matr_move = Matrix4x4.CreateTranslation(scene.Terrain.VisibleTerrainModel.Pivot.Center - scene.Camera.Pivot.Center);
-            var model_view_matr = scene.Terrain.VisibleTerrainModel.ToWorldMatrix * matr_move * scene.Camera.Pivot.LocalCoordsMatrix * scene.Camera.PerspectiveClip;
+            var model_view_matr = scene.Terrain.VisibleTerrainModel.ToWorldMatrix * matr_move * scene.Camera.Pivot.LocalCoordsMatrix;
 
-            var vertices = new List<Vertex>(scene.Terrain.VisibleTerrainModel.Vertices);
+            var vertices = scene.Terrain.VisibleTerrainModel.Vertices.Clone();
             List<PolygonInfo> visible_pols = new List<PolygonInfo>();
             List<float> ws = new List<float>();
             List<float> light_levels = new List<float>();
@@ -64,9 +82,17 @@ namespace RenderLib
 
             foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
             {
-                if (scene.Camera.IsVisible(vertices, pol))
+                Vertex[] v_persp = new Vertex[3];
+                for (int i = 0; i < 3; i++)
                 {
-                    visible_pols.Add(new PolygonInfo(vertices[pol[0]], vertices[pol[1]], vertices[pol[2]], scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
+                    v_persp[i] = new Vertex(vertices[pol[i]]);
+                    v_persp[i].Transform(scene.Camera.PerspectiveClip);
+                }
+                    
+                if (scene.Camera.IsVisible(v_persp[0]) && scene.Camera.IsVisible(v_persp[1]) && scene.Camera.IsVisible(v_persp[2]))
+                {
+                    visible_pols.Add(new PolygonInfo((Vertex)vertices[pol[0]].Clone(), (Vertex)vertices[pol[1]].Clone(), (Vertex)vertices[pol[2]].Clone(), 
+                                        scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
 
                     for (int i = 0; i < 3; i++)
                     {
@@ -86,29 +112,26 @@ namespace RenderLib
             foreach (var pol in pols)
             {
                 for (int i = 0; i < 3; i++)
-                    pol.ScreenVertices[i] = new ScreenVertex(cam.ScreenProjection(pol.Vertices[i].Position), pol.Ws[i], pol.Vertices[i].TextureCoords, pol.LightLevelsOnVertices[i]);
+                {
+                    var temp = new Vertex(pol.Vertices[i]);
+                    temp.Transform(cam.PerspectiveClip);
+                    pol.ScreenVertices[i] = new FragmentInfo(pol.Vertices[i].Position, pol.Ws[i]);
+
+                    pol.ScreenVertices[i].ScreenPos = cam.ToScreenProjection(temp.Position);
+                    pol.ScreenVertices[i].TextureCoords = pol.Vertices[i].TextureCoords;
+                    pol.ScreenVertices[i].Intensity = pol.LightLevelsOnVertices[i];
+                }
 
                 var first = pol.ScreenVertices[0];
                 var second = pol.ScreenVertices[1];
                 var third = pol.ScreenVertices[2];
 
-                int x_min, x_max, y_min, y_max;
-                x_min = MathAddon.Min3(first.ScreenX, second.ScreenX, third.ScreenX);
-                x_max = MathAddon.Max3(first.ScreenX, second.ScreenX, third.ScreenX);
-                y_min = MathAddon.Min3(first.ScreenY, second.ScreenY, third.ScreenY);
-                y_max = MathAddon.Max3(first.ScreenY, second.ScreenY, third.ScreenY);
-
-                // Коэффициенты плоскости
-                float a = (second.ScreenY - first.ScreenY) * (third.Z - first.Z) - (second.Z - first.Z) * (third.ScreenY - first.ScreenY);
-                float b = (second.Z - first.Z) * (third.ScreenX - first.ScreenX) - (second.ScreenX - first.ScreenX) * (third.Z - first.Z);
-                float c = (second.ScreenX - first.ScreenX) * (third.ScreenY - first.ScreenY) - (second.ScreenY - first.ScreenY) * (third.ScreenX - first.ScreenX);
-                float d = -(a * first.ScreenX + b * first.ScreenY + c * first.Z);
-
                 List<Point> outline_points = new List<Point>();
 
                 for (int i = 0; i < 3; i++)
                 {
-                    var line = Brezenhem(pol.ScreenVertices[i % 3].ScreenX, pol.ScreenVertices[i % 3].ScreenY, pol.ScreenVertices[(i + 1) % 3].ScreenX, pol.ScreenVertices[(i + 1) % 3].ScreenY);
+                    var line = Brezenhem((int)pol.ScreenVertices[i % 3].ScreenPos.X, (int)pol.ScreenVertices[i % 3].ScreenPos.Y, 
+                                            (int)pol.ScreenVertices[(i + 1) % 3].ScreenPos.X, (int)pol.ScreenVertices[(i + 1) % 3].ScreenPos.Y);
                     outline_points.AddRange(line);
                 }
                 
@@ -117,22 +140,22 @@ namespace RenderLib
                 foreach (var seg in outline_segs)
                 {
                     int yi = seg.Key;
-                    int x1 = seg.Value.MinX, x2 = seg.Value.MaxX; ;
+                    int x1 = seg.Value.MinX, x2 = seg.Value.MaxX;
 
                     float det;
-                    Vector3 bar_p1 = Baricentric(first.ScreenPos, second.ScreenPos, third.ScreenPos, new Point(x1, yi), out det);
-                    Vector3 bar_p2 = Baricentric(first.ScreenPos, second.ScreenPos, third.ScreenPos, new Point(x2, yi), out det);
+                    Vector3 bar_p1 = MathAddon.Baricentric(first.ScreenPos.ToPoint(), second.ScreenPos.ToPoint(), third.ScreenPos.ToPoint(), new Point(x1, yi), out det);
+                    Vector3 bar_p2 = MathAddon.Baricentric(first.ScreenPos.ToPoint(), second.ScreenPos.ToPoint(), third.ScreenPos.ToPoint(), new Point(x2, yi), out det);
 
                     // Полигон проецируется в отрезок на экран
                     if (MathAddon.IsEqual(det, 0))
-                        continue;
+                        break;
 
                     // Перспективно-корректное ткстурирование
-                    float w_11 = 1f / first.W * bar_p1.X + 1f / second.W * bar_p1.Y + 1f / third.W * bar_p1.Z;
-                    float w_12 = 1f / first.W * bar_p2.X + 1f / second.W * bar_p2.Y + 1f / third.W * bar_p2.Z;
+                    float w_11 = MathAddon.InBaricentric(bar_p1, 1f / first.W, 1f / second.W, 1f / third.W);
+                    float w_12 = MathAddon.InBaricentric(bar_p2, 1f / first.W, 1f / second.W, 1f / third.W);
 
-                    Vector2 uv_w1 = first.TextureCoords / first.W * bar_p1.X + second.TextureCoords / second.W * bar_p1.Y + third.TextureCoords / third.W * bar_p1.Z;
-                    Vector2 uv_w2 = first.TextureCoords / first.W * bar_p2.X + second.TextureCoords / second.W * bar_p2.Y + third.TextureCoords / third.W * bar_p2.Z;
+                    Vector2 uv_w1 = MathAddon.InBaricentric(bar_p1, first.TextureCoords / first.W, second.TextureCoords / second.W, third.TextureCoords / third.W);
+                    Vector2 uv_w2 = MathAddon.InBaricentric(bar_p2, first.TextureCoords / first.W, second.TextureCoords / second.W, third.TextureCoords / third.W);
 
                     float dw_1 = (w_12 - w_11) / (x2 - x1 + 1);
                     Vector2 d_uv_w = (uv_w2 - uv_w1) / (x2 - x1 + 1);
@@ -142,22 +165,41 @@ namespace RenderLib
 
 
                     // Закраска Гуро
-                    float I1 = bar_p1.X * first.Intensity + bar_p1.Y * second.Intensity + bar_p1.Z * third.Intensity;
-                    float I2 = bar_p2.X * first.Intensity + bar_p2.Y * second.Intensity + bar_p2.Z * third.Intensity;
+                    float I1 = MathAddon.InBaricentric(bar_p1, first.Intensity, second.Intensity, third.Intensity);
+                    float I2 = MathAddon.InBaricentric(bar_p2, first.Intensity, second.Intensity, third.Intensity);
 
-                    float dI = (I2 - I1) / (x2 - x1);
+                    float dI = (I2 - I1) / (x2 - x1 + 1);
                     float I_start = I1;
 
-                    float zi = -(a * x1 + b * yi + d) / c;
+
+                    // Координаты в пространстве обзора
+                    float x_start = MathAddon.InBaricentric(bar_p1, first.Position.X, second.Position.X, third.Position.X);
+                    float x_end = MathAddon.InBaricentric(bar_p2, first.Position.X, second.Position.X, third.Position.X);
+                    float dx = (x_end - x_start) / (x2 - x1 + 1);
+                    float x_i = x_start;
+
+                    float y_start = MathAddon.InBaricentric(bar_p1, first.Position.Y, second.Position.Y, third.Position.Y);
+                    float y_end = MathAddon.InBaricentric(bar_p2, first.Position.Y, second.Position.Y, third.Position.Y);
+                    float dy = (y_end - y_start) / (x2 - x1 + 1);
+                    float y_i = y_start;
+
+                    float z_start = MathAddon.InBaricentric(bar_p1, first.Position.Z, second.Position.Z, third.Position.Z);
+                    float z_end = MathAddon.InBaricentric(bar_p2, first.Position.Z, second.Position.Z, third.Position.Z);
+                    float dz = (z_end - z_start) / (x2 - x1 + 1);
+                    float z_i = z_start;
+
                     for (int xi = x1; xi <= x2; xi++)
                     {
                         Color texel = pol.Texture.GetTexel(uv_w.X / w_1, uv_w.Y / w_1);
 
-                        pol.Pixels.Add(new FragmentInfo(xi, yi, zi, light.GetColorByIntensity(texel, I_start)));
+                        pol.Pixels.Add(new FragmentInfo(x_i, y_i, z_i, 1f / w_1, xi, yi, light.GetColorByIntensity(texel, I_start)));
 
                         uv_w += d_uv_w;
                         w_1 += dw_1;
                         I_start += dI;
+                        z_i += dz;
+                        x_i += dx;
+                        y_i += dy;
                     }
                 }
             }
@@ -168,33 +210,61 @@ namespace RenderLib
             FrameBuffer.Clear();
             for (int i = 0; i < width; i++)
                 for (int j = 0; j < height; j++)
-                    DepthBuffer[i, j] = 1; // Установка макс. значения (см. однородное пространство отсечения)
+                    DepthBuffer[i, j] = float.PositiveInfinity;
 
-            foreach (var p in pols)
+            Parallel.ForEach(pols, p =>
             {
                 foreach (var pixel in p.Pixels)
                 {
-                    if (pixel.Depth < DepthBuffer[pixel.ScreenX, pixel.ScreenY])
+                    if (pixel.Position.Z < DepthBuffer[(int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y])
                     {
-                        DepthBuffer[pixel.ScreenX, pixel.ScreenY] = pixel.Depth;
+                        DepthBuffer[(int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y] = pixel.Position.Z;
 
-                        FrameBuffer.SetPixel(pixel.ScreenX, pixel.ScreenY, pixel.Color);
+                        FrameBuffer.SetPixel((int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y, pixel.Color);
                     }
                 }
-            }
+            });
         }
 
-        private Vector3 Baricentric(Point a, Point b, Point c, Point p, out float det_res)
+        private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, DirectionalLight light)
         {
-            Vector3 bar = new Vector3();
+            //for (int i = 0; i < width; i++)
+            //    for (int j = 0; j < height; j++)
+            //        FrameBuffer.SetPixel(i, j, shadow_drawer.FrameBuffer.GetPixel(i, j));
+            //return;
 
-            float det = (b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y);
-            det_res = det;
-            bar.X = ((b.Y - c.Y) * (p.X - c.X) + (c.X - b.X) * (p.Y - c.Y)) / det;
-            bar.Y = ((c.Y - a.Y) * (p.X - c.X) + (a.X - c.X) * (p.Y - c.Y)) / det;
-            bar.Z = 1 - bar.X - bar.Y;
+            // Удаление невидимых линий и поверхностей
+            FrameBuffer.Clear();
+            for (int i = 0; i < width; i++)
+                for (int j = 0; j < height; j++)
+                    DepthBuffer[i, j] = float.PositiveInfinity;
 
-            return bar;
+            Camera shadow_camera = new Camera(light.Pivot, cam.ScreenWidth, cam.ScreenHeight, cam.ScreenNearDist, cam.ScreenFarDist);
+            Matrix4x4 cam_to_light_matr = cam.Pivot.GlobalCoordsMatrix * Matrix4x4.CreateTranslation(cam.Pivot.Center - shadow_camera.Pivot.Center) * shadow_camera.Pivot.LocalCoordsMatrix; 
+            //Stopwatch sw = Stopwatch.StartNew();
+            Parallel.ForEach(pols, p => 
+            {
+                foreach (var pixel in p.Pixels)
+                {
+                    if (pixel.Position.Z < DepthBuffer[(int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y])
+                    {
+                        DepthBuffer[(int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y] = pixel.Position.Z;
+
+                        var pixel_loc = Vector3.Transform(pixel.Position, cam_to_light_matr);
+                        var pixel_persp = pixel_loc.Transform(shadow_camera.PerspectiveClip);
+                        var scr_proj = shadow_camera.ToScreenProjection(pixel_persp).ToPoint();
+
+                        if (scr_proj.X < 0 || scr_proj.X >= width || scr_proj.Y < 0 || scr_proj.Y >= height)
+                            pixel.Color = light.GetColorByIntensity(pixel.Color, 0.7f);
+                        else if (pixel_loc.Z > ShadowBuffer[scr_proj.X, scr_proj.Y] + 3f || ShadowBuffer[scr_proj.X, scr_proj.Y] == float.PositiveInfinity)
+                            pixel.Color = light.GetColorByIntensity(pixel.Color, 0.7f);
+
+                        FrameBuffer.SetPixel((int)pixel.ScreenPos.X, (int)pixel.ScreenPos.Y, pixel.Color);
+                    }
+                }
+            });
+
+            //Console.WriteLine(sw.ElapsedTicks / (Environment.ProcessorCount - 1));
         }
 
         private List<Point> Brezenhem(int x_start, int y_start, int x_end, int y_end)
@@ -254,7 +324,6 @@ namespace RenderLib
             return outline;
         }
 
-
         class SegmentX
         {
             public int MinX { get; set; }
@@ -277,7 +346,7 @@ namespace RenderLib
         public Vector3 Normal { get; set; }
         public float[] LightLevelsOnVertices { get; set; }
         public float[] Ws { get; set; } // Четвёртая координата каждой вершины
-        public ScreenVertex[] ScreenVertices { get; set; }
+        public FragmentInfo[] ScreenVertices { get; set; }
         public List<FragmentInfo> Pixels { get; set; }
 
         public Texture Texture { get; set; }
@@ -289,7 +358,7 @@ namespace RenderLib
             LightLevelsOnVertices = new float[3];
             Ws = new float[3];
             Pixels = new List<FragmentInfo>();
-            ScreenVertices = new ScreenVertex[3];
+            ScreenVertices = new FragmentInfo[3];
         }
 
         public PolygonInfo(Vertex[] verts, Vector3 norm)
@@ -299,71 +368,62 @@ namespace RenderLib
             LightLevelsOnVertices = new float[3];
             Ws = new float[3];
             Pixels = new List<FragmentInfo>();
-            ScreenVertices = new ScreenVertex[3];
+            ScreenVertices = new FragmentInfo[3];
         }
     }
 
-    class ScreenVertex
-    {
-        public int ScreenX { get; set; }
-        public int ScreenY { get; set; }
-        public float Z { get; set; }
-        public float W { get; set; }
-
-        public Point ScreenPos => new Point(ScreenX, ScreenY);
-        public Vector2 TextureCoords => new Vector2(U, V);
-        public float U { get; set; }
-        public float V { get; set; }
-
-        public float Intensity { get; set; }
-
-        public ScreenVertex(int x, int y, float z, float w, float u, float v, float i)
-        {
-            ScreenX = x;
-            ScreenY = y;
-            Z = z;
-            W = w;
-            U = u;
-            V = v;
-            Intensity = i;
-        }
-
-        public ScreenVertex(Vector3 v, float w, Vector2 uv, float i)
-        {
-            ScreenX = (int)v.X;
-            ScreenY = (int)v.Y;
-            Z = v.Z;
-            W = w;
-            U = uv.X;
-            V = uv.Y;
-            Intensity = i;
-        }
-    }
 
     /// <summary>
     /// Класс для описания точки в экранных координатах и её глубины
     /// </summary>
     class FragmentInfo
     {
-        public int ScreenX { get; set; }
-        public int ScreenY { get; set; }
-        public float Depth { get; set; }
+        public Vector3 Position { get; set; }
+        public float W;
+        public Vector2 ScreenPos { get; set; }
+        public Vector2 TextureCoords { get; set; }
         public Color Color { get; set; }
+        public float Intensity { get; set; }
 
-        public FragmentInfo(int x, int y, float z, Color c)
+        public FragmentInfo(Vector3 v, float w)
         {
-            ScreenX = x;
-            ScreenY = y;
-            Depth = z;
+            Position = v;
+            W = w;
+        }
+
+        public FragmentInfo(float x, float y, float z, float w, int scr_x, int scr_y, float u, float v, Color c)
+        {
+            Position = new Vector3(x, y, z);
+            W = w;
+            ScreenPos = new Vector2(scr_x, scr_y);
+            Color = c;
+            TextureCoords = new Vector2(u, v);
+        }
+
+        public FragmentInfo(float x, float y, float z, float w, int scr_x, int scr_y, Color c, float intensity)
+        {
+            Position = new Vector3(x, y, z);
+            W = w;
+            ScreenPos = new Vector2(scr_x, scr_y);
+            Color = c;
+            Intensity = intensity;
+        }
+        public FragmentInfo(float x, float y, float z, float w, int scr_x, int scr_y, Color c)
+        {
+            Position = new Vector3(x, y, z);
+            W = w;
+            ScreenPos = new Vector2(scr_x, scr_y);
             Color = c;
         }
 
-        public FragmentInfo(Vector3 v, Color c)
+        public FragmentInfo(Vector3 v, float w, Vector2 scr_v, Vector2 tex_coords, Color c, float intensity)
         {
-            ScreenX = (int)v.X;
-            ScreenY = (int)v.Y;
-            Depth = v.Z;
+            Position = v;
+            W = w;
+            ScreenPos = scr_v;
+            TextureCoords = tex_coords;
             Color = c;
+            Intensity = intensity;
         }
     }
 }

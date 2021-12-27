@@ -10,7 +10,7 @@ namespace RenderLib
 {
     public abstract class Light : Object3D
     {
-        protected static readonly float min_intensity = 0.2f;
+        protected static readonly float min_intensity = 0.175f;
         protected float intensity, diffuse_coef;
         public abstract float MaxIntensity { get; protected set; }
         public abstract float DiffuseCoef { get; protected set; }
@@ -27,25 +27,25 @@ namespace RenderLib
         }
     }
 
-    public class DirectionalLight : Light, IProjectable
+    public class DirectionalLight : Light
     {
         private static double fov = Math.PI / 2;
         private float r, t, tg_fov = (float)Math.Tan(fov / 2);
 
-        public DirectionalLight(Pivot p, Vector3 l_dir, float max_intensity = 1f, float dif_coef = 1f, int width = 512, int height = 512)
+        public DirectionalLight(Pivot p, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
         {
             Pivot = p;
-            MaxIntensity = max_intensity;
+            MaxIntensity = 1f;
             DiffuseCoef = dif_coef;
             LightDirection = l_dir;
 
             ScreenWidth = width;
             ScreenHeight = height;
-            ScreenNearDist = 0.001f;
-            ScreenFarDist = 1e10f;
+            ScreenNearDist = 0.05f;
+            ScreenFarDist = 1e6f;
 
             t = ScreenNearDist * tg_fov;
-            r = t * ((float)width / height);
+            r = t * ((float)ScreenWidth / ScreenHeight);
         }
 
         public override float MaxIntensity
@@ -86,16 +86,16 @@ namespace RenderLib
         (
             ScreenNearDist / r, 0, 0, 0,
             0, ScreenNearDist / t, 0, 0,
-            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), -1,
+            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), -1f,
             0, 0, 2 * ScreenNearDist * ScreenFarDist / (ScreenNearDist - ScreenFarDist), 0
         );
 
         public Matrix4x4 OrtogonalClip => new Matrix4x4
         (
-            1f / r, 0, 0, 0,
-            0, 1f / t, 0, 0,
-            0, 0, -2.0f / (ScreenFarDist - ScreenNearDist), 0,
-            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), 1
+            2f / ScreenWidth, 0, 0, 0,
+            0, 2f / ScreenHeight, 0, 0,
+            0, 0, -1f / (ScreenFarDist - ScreenNearDist), 0,
+            0, 0, 0, 1f
         );
 
         public override float GetAngleIntensity(Vector3 normal, Vector3 light_dir)
@@ -103,23 +103,6 @@ namespace RenderLib
             float intensity = MaxIntensity * diffuse_coef * Vector3.Dot(normal, light_dir);
 
             return intensity < 0 ? 0 : intensity;
-        }
-
-        public bool IsVisible(Vector3 p)
-        {
-            float min = -1, max = 1;
-
-            return min <= p.X && p.X <= max && min <= p.Y && p.Y <= max && min <= p.Z && p.Z <= max;
-        }
-
-        public bool IsVisible(Vertex v)
-        {
-            return IsVisible(v.Position);
-        }
-
-        public bool IsVisible(PolModel model, Polygon pol)
-        {
-            return IsVisible(model.GetPolVertex(pol, 0)) && IsVisible(model.GetPolVertex(pol, 1)) && IsVisible(model.GetPolVertex(pol, 2));
         }
 
         public override void Move(float dx, float dy, float dz)
@@ -140,14 +123,6 @@ namespace RenderLib
         public override void Scale(float kx, float ky, float kz)
         {
             return;
-        }
-
-        public Vector3 ScreenProjection(Vector3 p)
-        {
-            float x = ScreenWidth / 2.0f * (1 + p.X);
-            float y = ScreenHeight - ScreenHeight / 2.0f * (1 + p.Y);
-
-            return new Vector3(x, y, p.Z);
         }
     }
 }

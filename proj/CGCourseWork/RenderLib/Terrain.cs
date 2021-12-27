@@ -20,7 +20,7 @@ namespace RenderLib
 
 
         public Terrain(int width, int height, int vis_width, int vis_height, List<Texture> textures) : this(new HeightMap(width, height, 
-                                                                                                        new PerlinNoise(Math.Max(vis_width, vis_height) / 3, 4, seed:12345)), 
+                                                                                                        new PerlinNoise(Math.Max(vis_width, vis_height) / 3, 3, seed:12345)), 
                                                                                                         vis_width, vis_height,
                                                                                                         textures)
         { }
@@ -40,7 +40,7 @@ namespace RenderLib
 
             scale_coefs = new Vector3(1, 1, 1);
 
-            //map.SaveToBmp(@"D:\Repos\CGCourseWork\proj\CGCourseWork\heightmaps\", "test");
+            map.SaveToBmp(@"D:\Repos\CGCourseWork\proj\CGCourseWork\heightmaps\", "test");
             map.Normalize();
 
             land_textures = textures;

@@ -7,25 +7,7 @@ using System.Numerics;
 
 namespace RenderLib
 {
-    public interface IProjectable
-    {
-        int ScreenWidth { get; }
-        int ScreenHeight { get; }
-
-        float ScreenNearDist { get; }
-        float ScreenFarDist { get; }
-
-        Matrix4x4 PerspectiveClip { get; }
-
-        Matrix4x4 OrtogonalClip { get; }
-
-        bool IsVisible(Vector3 p);
-        bool IsVisible(Vertex v);
-        bool IsVisible(PolModel model, Polygon pol);
-        Vector3 ScreenProjection(Vector3 p);
-    }
-
-    public class Camera : Object3D, IProjectable
+    public class Camera : Object3D
     {
         public int ScreenWidth { get; private set; }
         public int ScreenHeight { get; private set; }
@@ -52,8 +34,8 @@ namespace RenderLib
         (
             ScreenNearDist / r, 0, 0, 0,
             0, ScreenNearDist / t, 0, 0,
-            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), -1,
-            0, 0, 2 * ScreenNearDist * ScreenFarDist / (ScreenNearDist - ScreenFarDist), 0
+            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), -1f,
+            0, 0, 2f * ScreenNearDist * ScreenFarDist / (ScreenNearDist - ScreenFarDist), 0
         );
 
         public Matrix4x4 OrtogonalClip => new Matrix4x4
@@ -61,7 +43,7 @@ namespace RenderLib
             1f / r, 0, 0, 0,
             0, 1f / t, 0, 0,
             0, 0, -2.0f / (ScreenFarDist - ScreenNearDist), 0,
-            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), 1
+            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), 1f
         );
 
         public Vector3 Position
@@ -130,17 +112,39 @@ namespace RenderLib
             Pivot.RotateAt(p, angle, axis);
         }
 
-        public Vector3 ScreenProjection(Vector3 p)
+        public Vector2 ToScreenProjection(Vector3 p)
         {
             float x = ScreenWidth / 2.0f * (1 + p.X);
             float y = ScreenHeight - ScreenHeight / 2.0f * (1 + p.Y);
 
-            if (x > ScreenWidth - 1)
-                x = ScreenWidth - 1;
-            if (y > ScreenHeight - 1)
-                y = ScreenHeight - 1;
+            x = MathAddon.RoundToInt(x);
+            y = MathAddon.RoundToInt(y);
 
-            return new Vector3(MathAddon.RoundToInt(x), MathAddon.RoundToInt(y), p.Z);
+            return new Vector2((int)x >= ScreenWidth ? ScreenWidth - 1 : x, (int)y >= ScreenHeight ? ScreenHeight - 1 : y);
+        }
+
+        public Vector3 FromScreenProjection(Vector3 p)
+        {
+            float x = p.X * 2f / ScreenWidth - 1;
+            float y = (ScreenHeight - p.Y) * 2f / ScreenHeight - 1;
+
+            return new Vector3(x, y, p.Z);
+        }
+
+        public Vector4 ToScreenProjection(Vector4 p)
+        {
+            float x = ScreenWidth / 2.0f * (1 + p.X / p.W);
+            float y = ScreenHeight - ScreenHeight / 2.0f * (1 + p.Y / p.W);
+
+            return new Vector4(MathAddon.RoundToInt(x), MathAddon.RoundToInt(y), p.Z / p.W, p.W);
+        }
+
+        public Vector4 FromScreenProjection(Vector4 p)
+        {
+            float x = p.X * 2f / ScreenWidth - 1;
+            float y = (ScreenHeight - p.Y) * 2f / ScreenHeight - 1;
+
+            return new Vector4(x * p.W, y * p.W, p.Z * p.W, p.W);
         }
     }
 }

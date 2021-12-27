@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
-
+using System.Drawing;
 
 namespace RenderLib
 {
@@ -97,6 +97,11 @@ namespace RenderLib
             return new Vector3(v.X / v.W, v.Y / v.W, v.Z / v.W);
         }
 
+        public static Point ToPoint(this Vector2 v)
+        {
+            return new Point((int)v.X, (int)v.Y);
+        }
+
         public static int Lepr(int min, int max, float amount)
         {
             return MathAddon.RoundToInt(min + (max - min) * amount);
@@ -143,6 +148,29 @@ namespace RenderLib
                 m = c;
 
             return (int)m;
+        }
+
+        public static Vector3 Baricentric(Point a, Point b, Point c, Point p, out float det_res)
+        {
+            Vector3 bar = new Vector3();
+
+            float det = (b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y);
+            det_res = det;
+            bar.X = ((b.Y - c.Y) * (p.X - c.X) + (c.X - b.X) * (p.Y - c.Y)) / det;
+            bar.Y = ((c.Y - a.Y) * (p.X - c.X) + (a.X - c.X) * (p.Y - c.Y)) / det;
+            bar.Z = 1 - bar.X - bar.Y;
+
+            return bar;
+        }
+
+        public static float InBaricentric(Vector3 bar, float v1, float v2, float v3)
+        {
+            return bar.X * v1 + bar.Y * v2 + bar.Z * v3;
+        }
+
+        public static Vector2 InBaricentric(Vector3 bar, Vector2 v1, Vector2 v2, Vector2 v3)
+        {
+            return bar.X * v1 + bar.Y * v2 + bar.Z * v3;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace RenderLib
     /// <summary>
     /// Класс вершины
     /// </summary>
-    public class Vertex
+    public class Vertex : ICloneable
     {
         /// <summary>
         /// Позиция вершины в мировой системе координат
@@ -68,6 +68,26 @@ namespace RenderLib
             AdjacentPolygons = new List<int>();
         }
 
+        public Vertex(Vector3 pos, Vector2 texcoords, Vector3 norm, List<int> adj_pols)
+        {
+            Position = pos;
+            TextureCoords = texcoords;
+            Normal = norm;
+
+            AdjacentPolygons = adj_pols;
+        }
+
+        public Vertex(Vertex v)
+        {
+            Position = v.Position;
+            TextureCoords = v.TextureCoords;
+            Normal = v.Normal;
+            AdjacentPolygons = new List<int>();
+
+            foreach (var elem in v.AdjacentPolygons)
+                AdjacentPolygons.Add(elem);
+        }
+
         /// <summary>
         /// Перемещение вершины относительно начала координат
         /// </summary>
@@ -115,6 +135,16 @@ namespace RenderLib
         {
             Position = Position.Transform(matr, out w);
             Normal = Normal.Transform(matr);
+        }
+
+        public object Clone()
+        {
+            List<int> adj_pols = new List<int>();
+
+            foreach (var elem in AdjacentPolygons)
+                adj_pols.Add(elem);
+
+            return new Vertex(Position, TextureCoords, Normal, adj_pols);
         }
     }
 
@@ -197,6 +227,14 @@ namespace RenderLib
             XAxis = xaxis;
             YAxis = yaxis;
             ZAxis = zaxis;
+        }
+
+        public Pivot(Pivot p)
+        {
+            Center = new Vector3(p.Center.X, p.Center.Y, p.Center.Z);
+            XAxis = new Vector3(p.XAxis.X, p.XAxis.Y, p.XAxis.Z);
+            YAxis = new Vector3(p.YAxis.X, p.YAxis.Y, p.YAxis.Z);
+            ZAxis = new Vector3(p.ZAxis.X, p.ZAxis.Y, p.ZAxis.Z);
         }
 
         /// <summary>

@@ -34,7 +34,10 @@ namespace UI
             Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
             cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
 
-            DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 100), Vector3.Normalize(new Vector3(0, -50, -100)));
+            DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 600), new Vector3(0, 0, -1));
+            light.RotateAt(center, -(float)Math.PI / 4, Axis.X);
+            light.RotateAt(center, -(float)Math.PI / 2, Axis.Y);
+            //light.RotateAt(center, (float)Math.PI / 2, Axis.Y);
 
             List<Texture> textures = new List<Texture>() {new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
@@ -47,8 +50,8 @@ namespace UI
             Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
             Facade fac = new Facade(scene, draw);
 
-            fac.RotateTerrain((float)Math.PI / 4, Axis.Y);
-            fac.MoveTerrain(10, 10);
+            //fac.RotateTerrain((float)Math.PI / 2, Axis.Y);
+            //fac.MoveTerrain(10, 10);
 
             MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
         }
