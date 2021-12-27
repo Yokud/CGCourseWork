@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,9 +38,15 @@ namespace RenderLib
             Terrain.Move(dx, dz);
         }
 
-        //public void RotateLight(float angle, Axis axis)
-        //{
-        //    LightSource.RotateAt();
-        //}
+        public void RotateLight(float angle, Axis axis)
+        {
+            LightSource.RotateAt(Terrain.VisibleTerrainModel.Pivot.Center, angle, axis);
+        }
+
+        public void SetCamera(Vector3 pos, Vector3 x_a, Vector3 y_a, Vector3 z_a)
+        {
+            Camera.MoveTo(pos);
+            Camera.RotateTo(x_a, y_a, z_a);
+        }
     }
 }

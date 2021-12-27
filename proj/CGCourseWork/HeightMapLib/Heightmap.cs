@@ -378,7 +378,7 @@ namespace HeightMapLib
             }
         }
 
-        public PerlinNoise(int scale, int octaves = 1, float lacunarity = 2, float persistence = 0.5f, int seed = -1)
+        public PerlinNoise(int scale, int octaves = 1, float lacunarity = 2f, float persistence = 0.5f, int seed = -1)
         {
             Scale = scale;
             Octaves = octaves;

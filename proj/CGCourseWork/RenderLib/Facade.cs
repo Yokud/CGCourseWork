@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,6 +37,16 @@ namespace RenderLib
         public void MoveTerrain(int dx, int dz)
         {
             Scene.MoveTerrainLimits(dx, dz);
+        }
+
+        public void RotateLight(float angle, Axis axis)
+        {
+            Scene.RotateLight(angle, axis);
+        }
+
+        public void SetCamera(Vector3 pos, Vector3 x_a, Vector3 y_a, Vector3 z_a)
+        {
+            Scene.SetCamera(pos, x_a, y_a, z_a);
         }
     }
 }

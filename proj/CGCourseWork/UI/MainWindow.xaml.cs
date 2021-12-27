@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HeightMapLib;
 using RenderLib;
 
 namespace UI
@@ -25,35 +26,69 @@ namespace UI
     /// </summary>
     public partial class MainWindow : Window
     {
+        List<Texture> textures;
+        Facade fac;
+        Vector3 Center;
+        HeightMap map;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            Vector3 center = new Vector3(0, 0, 0);
+            Center = new Vector3(0, 0, 0);
 
-            Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
-            cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
+            //Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
+            //cam.RotateAt(center, -(float)Math.PI / 4, Axis.X);
 
-            DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 600), new Vector3(0, 0, -1));
-            light.RotateAt(center, -(float)Math.PI / 4, Axis.X);
-            light.RotateAt(center, -(float)Math.PI / 2, Axis.Y);
+            //DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 50, 600), new Vector3(0, 0, -1));
+            //light.RotateAt(center, -(float)Math.PI / 4, Axis.X);
+            //light.RotateAt(center, -(float)Math.PI / 2, Axis.Y);
             //light.RotateAt(center, (float)Math.PI / 2, Axis.Y);
 
-            List<Texture> textures = new List<Texture>() {new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
+            textures = new List<Texture>() {new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
                                                             new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
-            Terrain terr = new Terrain(300, 300, 64, 64, textures);
+            //Terrain terr = new Terrain(300, 300, 64, 64, textures);
 
-            Scene scene = new Scene(terr, cam, light);
-            Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
-            Facade fac = new Facade(scene, draw);
+            //Scene scene = new Scene(terr, cam, light);
+            //Drawer draw = new Drawer(cam.ScreenWidth, cam.ScreenHeight);
+            //fac = new Facade(scene, draw);
 
             //fac.RotateTerrain((float)Math.PI / 2, Axis.Y);
             //fac.MoveTerrain(10, 10);
 
-            MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+            //MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+        }
+
+        private void Generate_Click(object sender, RoutedEventArgs e)
+        {
+            GenMapWindow mapWindow = new GenMapWindow();
+
+            if (mapWindow.ShowDialog() == true)
+            {
+                int seed = -1, octs = 1;
+                if (mapWindow.seed)
+                    seed = mapWindow.Seed;
+
+                if (mapWindow.oct)
+                    octs = mapWindow.Octaves;
+
+                float lacun = 2f, pers = 0.5f;
+                if (mapWindow.lac)
+                    lacun = mapWindow.Lacunarity;
+                if (mapWindow.pers)
+                    pers = mapWindow.Persistence;
+
+                map = new HeightMap(mapWindow.MapWidth, mapWindow.MapHeight, new PerlinNoise(mapWindow.Scale, octs, lacun, pers, seed));
+                StateText.Text = $"Карта высот была сгенерирована с параметрами: {mapWindow.MapWidth} {mapWindow.MapHeight} {mapWindow.Scale} {3} {octs} {lacun} {pers} {seed}";
+            }
+        }
+
+        private void CreateLand_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 
