@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Numerics;
 using HeightMapLib;
 
@@ -39,7 +36,7 @@ namespace RenderLib
             map.Normalize();
 
             land_textures = textures;
-            terrain_model = new TerrainVisibleSection(vis_width, vis_height, map.NoiseMap, textures);
+            terrain_model = new TerrainVisibleSection(vis_width, vis_height, map.NoiseMap, land_textures);
         }
 
         internal TerrainVisibleSection VisibleTerrainModel => terrain_model;

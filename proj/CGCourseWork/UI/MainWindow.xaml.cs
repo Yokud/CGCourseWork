@@ -19,6 +19,12 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HeightMapLib;
 using RenderLib;
+using System.Threading;
+using Emgu.CV;
+using Emgu.CV.Aruco;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
 
 namespace UI
 {
@@ -40,6 +46,9 @@ namespace UI
 
         CultureInfo ci;
 
+
+        VideoCapture capture;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -54,6 +63,7 @@ namespace UI
 
             ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
             ci.NumberFormat.CurrencyDecimalSeparator = ".";
+            capture = new VideoCapture(0);
         }
 
         private void Generate_Click(object sender, RoutedEventArgs e)
@@ -206,7 +216,7 @@ namespace UI
             MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
         }
 
-        private void CreateLand_Click(object sender, RoutedEventArgs e)
+        private async void CreateLand_Click(object sender, RoutedEventArgs e)
         {
             SetLimitWindow limWindow = new SetLimitWindow();
 
@@ -242,7 +252,35 @@ namespace UI
                 RotateTerrainView.IsEnabled = true;
                 ScaleTerrainView.IsEnabled = true;
                 RotateLightSourse.IsEnabled = true;
+
+                await Task.Run(() => Capturing());
             }
+        }
+
+
+        static void Capturing()
+        {
+            int markersX = 1;
+            int markersY = 1;
+            int markersLength = 80;
+            int markersSeparation = 30;
+            Dictionary ArucoDict = new Dictionary(Dictionary.PredefinedDictionaryName.Dict4X4_100);
+            GridBoard ArucoBoard = new GridBoard(markersX, markersY, markersLength, markersSeparation, ArucoDict);
+            PrintArucoBoard(ArucoBoard, markersX, markersY, markersLength, markersSeparation);
+        }
+
+        static void PrintArucoBoard(GridBoard ArucoBoard, int markersX = 1, int markersY = 1, int markersLength = 80, int markersSeparation = 30)
+        {
+            int borderBits = 1;
+
+            System.Drawing.Size imageSize = new System.Drawing.Size();
+            Mat boardImage = new Mat();
+            imageSize.Width = markersX * (markersLength + markersSeparation) - markersSeparation + 2 * markersSeparation;
+            imageSize.Height = markersY * (markersLength + markersSeparation) - markersSeparation + 2 * markersSeparation;
+            ArucoBoard.Draw(imageSize, boardImage, markersSeparation, borderBits);
+
+            var img = boardImage.ToBitmap();
+            img.Save(@"D:\Repos\CGCourseWork\proj\CGCourseWork\markers\aruco.png");
         }
     }
 
@@ -266,4 +304,6 @@ namespace UI
             }
         }
     }
+
+
 }

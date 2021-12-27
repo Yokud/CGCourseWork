@@ -127,5 +127,13 @@
   <ItemGroup>
     <Resource Include="imgs\test.png" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Emgu.CV.Bitmap">
+      <Version>4.5.4.4788</Version>
+    </PackageReference>
+    <PackageReference Include="Emgu.CV.runtime.windows">
+      <Version>4.5.4.4788</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
