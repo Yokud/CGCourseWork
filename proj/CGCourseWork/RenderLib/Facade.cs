@@ -18,9 +18,9 @@ namespace RenderLib
             Drawer = drawer;
         }
 
-        public FastBitmap DrawScene()
+        public FastBitmap DrawScene(bool shadows = true)
         {
-            Drawer.DrawScene(Scene);
+            Drawer.DrawScene(Scene, shadows);
             return Drawer.FrameBuffer;
         }
 
