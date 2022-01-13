@@ -12,6 +12,8 @@ namespace RenderLib
         public float ScreenNearDist { get; private set; }
         public float ScreenFarDist { get; private set; }
 
+        public float FocalLength { get; private set; }
+
         private static double fov = Math.PI / 2;
         private float r, t, tg_fov = (float)Math.Tan(fov / 2);
 
@@ -23,8 +25,18 @@ namespace RenderLib
             ScreenNearDist = near_dist;
             ScreenFarDist = far_dist;
 
+            FocalLength = width;
+
             t = ScreenNearDist * tg_fov;
             r = t * ((float)ScreenWidth / ScreenHeight);
+        }
+
+        public Camera(Pivot p, int width, int height, float focal_length)
+        {
+            Pivot = p;
+            ScreenWidth = width;
+            ScreenHeight = height;
+            FocalLength = focal_length;
         }
 
         public Matrix4x4 PerspectiveClip => new Matrix4x4
@@ -43,38 +55,29 @@ namespace RenderLib
             0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), 1f
         );
 
-        public Vector3 Position
-        {
-            get { return Pivot.Center; }
-        }
+        public Matrix4x4 IntrinsicMatrix => new Matrix4x4
+        (
+            FocalLength, 0, 0, 0,
+            0, -FocalLength, 0, 0,
+            ScreenWidth / 2f, ScreenHeight / 2f, 1, 0,
+            0, 0, 0, 1
+        );
 
-        public bool IsVisible(Vector3 p)
-        {
-            float min = -1, max = 1;
-
-            return min <= p.X && p.X <= max && min <= p.Y && p.Y <= max && min <= p.Z && p.Z <= max;
-        }
-
-        public bool IsVisible(Vector4 p)
+        public bool IsVisibleGL(Vector3 p)
         {
             float min = -1, max = 1;
 
             return min <= p.X && p.X <= max && min <= p.Y && p.Y <= max && min <= p.Z && p.Z <= max;
         }
 
-        public bool IsVisible(Vertex v)
+        public bool IsVisibleGL(Vertex v)
         {
-            return IsVisible(v.Position);
+            return IsVisibleGL(v.Position);
         }
 
-        public bool IsVisible(PolModel model, Polygon pol)
+        public bool IsVisibleCV(Vector3 v)
         {
-            return IsVisible(model.GetPolVertex(pol, 0)) && IsVisible(model.GetPolVertex(pol, 1)) && IsVisible(model.GetPolVertex(pol, 2));
-        }
-
-        public bool IsVisible(List<Vertex> vertices, Polygon pol)
-        {
-            return IsVisible(vertices[pol[0]]) && IsVisible(vertices[pol[1]]) && IsVisible(vertices[pol[2]]);
+            return v.X >= 0 && v.X < ScreenWidth && v.Y >= 0 && v.Y < ScreenHeight;
         }
 
         public override void Move(float dx, float dy, float dz)
@@ -118,30 +121,6 @@ namespace RenderLib
             y = MathAddon.RoundToInt(y);
 
             return new Vector2((int)x >= ScreenWidth ? ScreenWidth - 1 : x, (int)y >= ScreenHeight ? ScreenHeight - 1 : y);
-        }
-
-        public Vector3 FromScreenProjection(Vector3 p)
-        {
-            float x = p.X * 2f / ScreenWidth - 1;
-            float y = (ScreenHeight - p.Y) * 2f / ScreenHeight - 1;
-
-            return new Vector3(x, y, p.Z);
-        }
-
-        public Vector4 ToScreenProjection(Vector4 p)
-        {
-            float x = ScreenWidth / 2.0f * (1 + p.X / p.W);
-            float y = ScreenHeight - ScreenHeight / 2.0f * (1 + p.Y / p.W);
-
-            return new Vector4(MathAddon.RoundToInt(x), MathAddon.RoundToInt(y), p.Z / p.W, p.W);
-        }
-
-        public Vector4 FromScreenProjection(Vector4 p)
-        {
-            float x = p.X * 2f / ScreenWidth - 1;
-            float y = (ScreenHeight - p.Y) * 2f / ScreenHeight - 1;
-
-            return new Vector4(x * p.W, y * p.W, p.Z * p.W, p.W);
         }
     }
 }

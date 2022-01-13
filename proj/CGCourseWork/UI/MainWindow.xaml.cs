@@ -47,7 +47,8 @@ namespace UI
         CultureInfo ci;
 
 
-        VideoCapture capture;
+        static VideoCapture capture;
+        bool captured = false;
 
         public MainWindow()
         {
@@ -55,15 +56,25 @@ namespace UI
 
             Center = new Vector3(0, 0, 0);
 
-            textures = new List<Texture>() {new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
-                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
-                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
-                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
-                                                            new Texture(@"D:\Repos\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
+            textures = new List<Texture>() {new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
+                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
+                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
+                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
+                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
 
             ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
             ci.NumberFormat.CurrencyDecimalSeparator = ".";
-            capture = new VideoCapture(0);
+
+            try
+            {
+                capture = new VideoCapture(0);
+                captured = true;
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message);
+                Close();
+            }
         }
 
         private void Generate_Click(object sender, RoutedEventArgs e)
@@ -86,8 +97,9 @@ namespace UI
                     pers = mapWindow.Persistence;
 
                 Map = new HeightMap(mapWindow.MapWidth, mapWindow.MapHeight, new PerlinNoise(mapWindow.Scale, octs, lacun, pers, seed));
-                StateText.Text = $"Карта высот была сгенерирована с параметрами: {mapWindow.MapWidth} {mapWindow.MapHeight} {mapWindow.Scale} {3} {octs} {lacun} {pers} {seed}";
+                StateText.Text = $"Карта высот была сгенерирована с параметрами: {Map.Width} {Map.Height} {Map.Scale} {Map.Octaves} {Map.Lacunarity} {Map.Persistence} {Map.Seed}";
             }
+    
         }
 
         private void ChangeAccept_Click(object sender, RoutedEventArgs e)
@@ -98,8 +110,6 @@ namespace UI
                 int dy = int.Parse(DeltaY_textbox.Text);
 
                 fac.MoveTerrain(dx, dy);
-
-                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
             }
             catch (Exception exc)
             {
@@ -113,9 +123,7 @@ namespace UI
             {
                 int d_angle = int.Parse(DeltaAngle_textbox.Text);
 
-                fac.RotateTerrain(MathAddon.DegToRad(d_angle), Axis.Y);
-
-                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
+                fac.RotateTerrain(MathAddon.DegToRad(d_angle), Axis.Z);
             }
             catch (Exception exc)
             {
@@ -132,8 +140,6 @@ namespace UI
                 float kz = float.Parse(ScaleZ_textbox.Text, NumberStyles.Any, ci);
 
                 fac.ScaleTerrain(kx, ky, kz);
-
-                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
             }
             catch (Exception exc)
             {
@@ -152,8 +158,6 @@ namespace UI
             rot_dx = slValue1.Value;
 
             dragStarted1 = false;
-
-            MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
         }
 
         private void slValue2_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
@@ -167,8 +171,6 @@ namespace UI
             rot_dy = slValue2.Value;
 
             dragStarted2 = false;
-
-            MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
         }
 
         private void slValue1_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -177,7 +179,6 @@ namespace UI
             {
                 fac.RotateLight(MathAddon.DegToRad((float)(slValue1.Value - rot_dx)), Axis.X);
                 rot_dx = slValue1.Value;
-                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
             }
         }
 
@@ -187,7 +188,6 @@ namespace UI
             {
                 fac.RotateLight(MathAddon.DegToRad((float)(slValue2.Value - rot_dy)), Axis.Y);
                 rot_dy = slValue2.Value;
-                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
             }
         }
 
@@ -197,7 +197,6 @@ namespace UI
             {
                 fac.RotateLight(MathAddon.DegToRad((float)(slValue3.Value - rot_dz)), Axis.Z);
                 rot_dz = slValue3.Value;
-                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
             }
         }
 
@@ -212,11 +211,15 @@ namespace UI
             rot_dz = slValue3.Value;
 
             dragStarted3 = false;
-
-            MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
         }
 
-        private async void CreateLand_Click(object sender, RoutedEventArgs e)
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            captured = false;
+            capture.Dispose();
+        }
+
+        private void CreateLand_Click(object sender, RoutedEventArgs e)
         {
             SetLimitWindow limWindow = new SetLimitWindow();
 
@@ -229,10 +232,9 @@ namespace UI
                 StateText.Text += $" {visWidth} {visHeight}";
 
 
-                Camera cam = new Camera(Pivot.BasePivot(0, 50, 600), 512, 512, 10, 1000);
-                cam.RotateAt(Center, -(float)Math.PI / 4, Axis.X);
+                Camera cam = new Camera(Pivot.BasePivot(0, 0, 0), 640, 480, 150, 100000);
 
-                DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 0, 700), new Vector3(0, 0, -1));
+                AreaLight light = new AreaLight(Pivot.BasePivot(0, -60, 700), new Vector3(0, 0, -1), width:640, height:480);
 
                 Terrain terr = new Terrain(Map, visWidth, visHeight, textures);
 
@@ -246,27 +248,102 @@ namespace UI
                 rot_dy = slValue2.Value;
                 rot_dz = slValue3.Value;
 
-                MainFrame.Source = fac.DrawScene().Bitmap.ToBitmapImage();
-
                 ChangeTerrainView.IsEnabled = true;
                 RotateTerrainView.IsEnabled = true;
                 ScaleTerrainView.IsEnabled = true;
                 RotateLightSourse.IsEnabled = true;
 
-                await Task.Run(() => Capturing());
+                Capturing();
             }
         }
 
 
-        static void Capturing()
+        void Capturing()
         {
             int markersX = 1;
             int markersY = 1;
-            int markersLength = 80;
-            int markersSeparation = 30;
+            int markersLength = 160;
+            int markersSeparation = 10;
             Dictionary ArucoDict = new Dictionary(Dictionary.PredefinedDictionaryName.Dict4X4_100);
             GridBoard ArucoBoard = new GridBoard(markersX, markersY, markersLength, markersSeparation, ArucoDict);
-            PrintArucoBoard(ArucoBoard, markersX, markersY, markersLength, markersSeparation);
+            //PrintArucoBoard(ArucoBoard, markersX, markersY, markersLength, markersSeparation);
+
+            DetectorParameters ArucoParameters = DetectorParameters.GetDefault();
+
+            string cameraConfigurationFile = @"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\cameraParameters.xml";
+            FileStorage fs = new FileStorage(cameraConfigurationFile, FileStorage.Mode.Read);
+            if (!fs.IsOpened)
+            {
+                Console.WriteLine("Could not open configuration file " + cameraConfigurationFile);
+                return;
+            }
+            Mat cameraMatrix = new Mat(new System.Drawing.Size(3, 3), DepthType.Cv32F, 1);
+            Mat distortionMatrix = new Mat(1, 8, DepthType.Cv32F, 1);
+            fs["cameraMatrix"].ReadMat(cameraMatrix);
+            fs["dist_coeffs"].ReadMat(distortionMatrix);
+
+            while (captured)
+            {
+                Mat frame = new Mat();
+                frame = capture.QueryFrame();
+
+                if (!frame.IsEmpty)
+                {
+                    VectorOfInt ids = new VectorOfInt(); // name/id of the detected markers
+                    VectorOfVectorOfPointF corners = new VectorOfVectorOfPointF(); // corners of the detected marker
+                    VectorOfVectorOfPointF rejected = new VectorOfVectorOfPointF(); // rejected contours
+                    ArucoInvoke.DetectMarkers(frame, ArucoDict, corners, ids, ArucoParameters, rejected);
+
+                    // If we detected at least one marker
+                    if (ids.Size != 0)
+                    {
+                        ArucoInvoke.DrawDetectedMarkers(frame, corners, ids, new MCvScalar(255, 0, 255));
+
+                        Mat rvecs = new Mat(); // rotation vector
+                        Mat tvecs = new Mat(); // translation vector
+                        ArucoInvoke.EstimatePoseSingleMarkers(corners, markersLength, cameraMatrix, distortionMatrix, rvecs, tvecs);
+
+                        Mat rvecMat = rvecs.Row(0);
+                        Mat tvecMat = tvecs.Row(0);
+                        VectorOfDouble rvec = new VectorOfDouble();
+                        VectorOfDouble tvec = new VectorOfDouble();
+                        
+                        double[] values = new double[3];
+                        rvecMat.CopyTo(values);
+                        rvec.Push(values);
+                        tvecMat.CopyTo(values);
+                        tvec.Push(values);
+                        ArucoInvoke.DrawAxis(frame,
+                                                cameraMatrix,
+                                                distortionMatrix,
+                                                rvec,
+                                                tvec,
+                                                markersLength * 0.5f);
+
+                        Matrix4x4 rot = GetRotationMatrixFromRotationVector(rvec).ToMatrix4x4();
+                        
+                        Vector4 t = new Vector4((float)tvec[0], (float)tvec[1], (float)tvec[2], 1);
+
+                        //Console.WriteLine("Marker pos: " + t.ToString());
+
+                        //t = Vector4.Transform(t, -rot); // положение камеры относительно маркера
+                        Vector3 pos = new Vector3(t.X, t.Y, t.Z);
+
+                        rot = Matrix4x4.Transpose(rot);
+                        Vector3 x_a = new Vector3(rot.M11, rot.M12, rot.M13);
+                        Vector3 y_a = new Vector3(rot.M21, rot.M22, rot.M23);
+                        Vector3 z_a = new Vector3(rot.M31, rot.M32, rot.M33);
+
+                        fac.SetCamera(pos, x_a, y_a, z_a);
+
+                        MainFrame.Source = CVAddon.ConcatTwoImages(frame.ToImage<Rgba, byte>().Flip(FlipType.Horizontal).ToBitmap(), fac.DrawScene(false).Bitmap).ToBitmapImage();
+                    }
+                    else
+                        MainFrame.Source = frame.ToImage<Rgba, byte>().Flip(FlipType.Horizontal).ToBitmap().ToBitmapImage();
+     
+                    CvInvoke.WaitKey(24);
+                }
+            }
         }
 
         static void PrintArucoBoard(GridBoard ArucoBoard, int markersX = 1, int markersY = 1, int markersLength = 80, int markersSeparation = 30)
@@ -280,11 +357,19 @@ namespace UI
             ArucoBoard.Draw(imageSize, boardImage, markersSeparation, borderBits);
 
             var img = boardImage.ToBitmap();
-            img.Save(@"D:\Repos\CGCourseWork\proj\CGCourseWork\markers\aruco.png");
+            img.Save(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\markers\aruco.png");
+        }
+
+        Mat GetRotationMatrixFromRotationVector(VectorOfDouble rvec)
+        {
+            Mat rmat = new Mat();
+            CvInvoke.Rodrigues(rvec, rmat);
+
+            return rmat;
         }
     }
 
-    public static partial class SystemAddon
+    public static class CVAddon
     {
         public static BitmapImage ToBitmapImage(this Bitmap bitmap)
         {
@@ -303,7 +388,53 @@ namespace UI
                 return bitmapImage;
             }
         }
+
+        public static Bitmap ConcatTwoImages(Bitmap b1, Bitmap b2)
+        {
+            var concat = new Bitmap(b1);
+            var gr = Graphics.FromImage(concat);
+            gr.DrawImage(b2, 0, 0);
+
+            return concat;
+        }
+
+        public static Matrix4x4 ToMatrix4x4(this Affine3d m)
+        {
+            double[] temp = m.GetValues();
+
+            Matrix4x4 matr = new Matrix4x4() { M11 = (float)temp[0], M12 = (float)temp[1], M13 = (float)temp[2], 
+                                               M21 = (float)temp[3], M22 = (float)temp[4], M23 = (float)temp[5], 
+                                               M31 = (float)temp[6], M32 = (float)temp[7], M33 = (float)temp[8], 
+                                               M44 = 1 };
+
+            return matr;
+        }
+
+        public static Matrix4x4 ToMatrix4x4(this Mat m)
+        {
+            double[,] tmp = (double[,])m.GetData();
+
+            double[] temp = new double[tmp.Length];
+
+            int i = 0;
+            foreach (double d in tmp)
+                temp[i++] = d;
+
+            Matrix4x4 matr = new Matrix4x4()
+            {
+                M11 = (float)temp[0],
+                M12 = (float)temp[1],
+                M13 = (float)temp[2],
+                M21 = (float)temp[3],
+                M22 = (float)temp[4],
+                M23 = (float)temp[5],
+                M31 = (float)temp[6],
+                M32 = (float)temp[7],
+                M33 = (float)temp[8],
+                M44 = 1
+            };
+
+            return matr;
+        }
     }
-
-
 }

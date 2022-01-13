@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace RenderLib
 {
-    public static partial class SystemAddon
+    public static class SystemAddon
     {
         public static void Swap<T>(ref T lhs, ref T rhs)
         {

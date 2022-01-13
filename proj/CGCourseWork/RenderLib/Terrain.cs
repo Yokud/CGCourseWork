@@ -17,7 +17,7 @@ namespace RenderLib
 
 
         public Terrain(int width, int height, int vis_width, int vis_height, List<Texture> textures) : this(new HeightMap(width, height, 
-                                                                                                        new PerlinNoise(Math.Max(vis_width, vis_height) / 3, 3, seed:12345)), 
+                                                                                                        new PerlinNoise(Math.Max(vis_width, vis_height) / 3, 3)), 
                                                                                                         vis_width, vis_height,
                                                                                                         textures)
         { }
@@ -79,16 +79,20 @@ namespace RenderLib
             this.width = width;
             this.height = height;
 
-            float topLeftX = (width - 1) / 2f;
-            float topLeftZ = (height - 1) / 2f;
+            float topLeftX = width / 2f;
+            float topLeftZ = height / 2f;
             int vert_index = 0;
 
             height_coef = (float)Math.Sqrt(height_map.GetLength(0) * height_map.GetLength(1));
 
+            float min_z = float.PositiveInfinity;
+
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
                 {
-                    Vertices.Add(new Vertex((x - topLeftX) * 10f, height_map[x, y] * height_coef, (y - topLeftZ) * 10f, (float)x / width * 3f, (float)y / height * 3f));
+                    Vertices.Add(new Vertex((x - topLeftX) * 10f, (y - topLeftZ) * 10f, height_map[x, y] * height_coef, (float)x / width * 3f, (float)y / height * 3f));
+
+                    min_z = height_map[x, y] * height_coef < min_z ? height_map[x, y] * height_coef : min_z;
 
                     if (x < width - 1 && y < height - 1)
                     {
@@ -101,6 +105,9 @@ namespace RenderLib
 
             land_textures = textures;
             pols_texture_types = new List<TextureType>();
+
+            foreach (var v in Vertices)
+                v.Move(0, 0, -min_z);
 
             RecalcNormals();
             RecalcAdjPols();
@@ -116,13 +123,20 @@ namespace RenderLib
             float topLeftX = (width - 1) / 2f;
             float topLeftZ = (height - 1) / 2f;
 
+            float min_z = float.PositiveInfinity;
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
-                    Vertices.Add(new Vertex((x - topLeftX) * 10f, height_map[x + start_x, y + start_y] * height_coef, (y - topLeftZ) * 10f, (float)x / width * 3f, (float)y / height * 3f));
+                {
+                    Vertices.Add(new Vertex((x - topLeftX) * 10f, (y - topLeftZ) * 10f, height_map[x + start_x, y + start_y] * height_coef, (float)x / width * 3f, (float)y / height * 3f));
 
+                    min_z = height_map[x, y] * height_coef < min_z ? height_map[x, y] * height_coef : min_z;
+                }
 
             if (!(MathAddon.IsEqual(scale_coefs.X, 1) && MathAddon.IsEqual(scale_coefs.Y, 1) && MathAddon.IsEqual(scale_coefs.Z, 1)))
                 Scale(scale_coefs.X, scale_coefs.Y, scale_coefs.Z);
+
+            foreach (var v in Vertices)
+                v.Move(0, 0, -min_z);
 
             RecalcAdjPols();
             RecalcNormals();
@@ -132,10 +146,10 @@ namespace RenderLib
 
         private void CorrectNormals()
         {
-            Vector3 mult = new Vector3(0, -1, 0);
+            Vector3 mult = new Vector3(1, 1, -1);
 
             for (int i = 0; i < Normals.Count; i++)
-                if (Normals[i].Y < 0)
+                if (Normals[i].Z < 0)
                     Normals[i] *= mult;
 
             RecalcVertexNormals();
@@ -145,7 +159,7 @@ namespace RenderLib
         {
             foreach (var pol in Polygons)
             {
-                float avg_height = (Vertices[pol[0]].Position.Y + Vertices[pol[1]].Position.Y + Vertices[pol[2]].Position.Y) / 3f;
+                float avg_height = (Vertices[pol[0]].Position.Z + Vertices[pol[1]].Position.Z + Vertices[pol[2]].Position.Z) / 3f;
 
                 if (avg_height < 0.2 * height_coef)
                     pols_texture_types.Add(TextureType.WATER);

@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 
 namespace RenderLib
 {
-    public class FastBitmap : IDisposable
+    public class FastBitmap : IDisposable, ICloneable
     {
         public Bitmap Bitmap { get; private set; }
         public int[] Bits { get; private set; }
@@ -66,6 +66,11 @@ namespace RenderLib
         {
             BitsHandle.Free();
             Disposed = true;
+        }
+
+        public object Clone()
+        {
+            return FastBitmap.FromBitmap(Bitmap);
         }
     }
 

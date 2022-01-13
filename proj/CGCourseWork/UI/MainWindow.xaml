@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UI"
         mc:Ignorable="d"
-        Title="CGCourseWork" MinHeight="470" MinWidth="900" WindowStyle="SingleBorderWindow" Height="470.089" Width="835.237">
+        Title="CGCourseWork" MinHeight="470" MinWidth="900" WindowStyle="SingleBorderWindow" Height="470.089" Width="835.237" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="380*"></ColumnDefinition>
@@ -158,7 +158,7 @@
                     <DockPanel Name="RotateX" Grid.Row="0" VerticalAlignment="Center" Margin="2">
                         <TextBox Text="{Binding ElementName=slValue1, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
                         <Label Content="  X:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
-                        <Slider Name="slValue1" Orientation="Horizontal" Margin="0, 3, 5, 0" Value="70" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True" 
+                        <Slider Name="slValue1" Orientation="Horizontal" Margin="0, 3, 5, 0" Value="45" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True" 
                                 ValueChanged="slValue1_ValueChanged"
                                 Thumb.DragStarted="slValue1_DragStarted"
                                 Thumb.DragCompleted="slValue1_DragCompleted"/>
@@ -167,7 +167,7 @@
                     <DockPanel Name="RotateY" Grid.Row="1" VerticalAlignment="Center" Margin="2">
                         <Label Content="  Y:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Text="{Binding ElementName=slValue2, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                        <Slider Name="slValue2" Orientation="Horizontal" Margin="0, 3, 5, 0" Value="90" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
+                        <Slider Name="slValue2" Orientation="Horizontal" Margin="0, 3, 5, 0" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="slValue2_ValueChanged"
                                 Thumb.DragStarted="slValue2_DragStarted"
                                 Thumb.DragCompleted="slValue2_DragCompleted"/>
@@ -176,7 +176,7 @@
                     <DockPanel Name="RotateZ" Grid.Row="2" VerticalAlignment="Center" Margin="2">
                         <Label Content="  Z:" Margin="2, 0, 0, 0" FontSize="12" DockPanel.Dock="Left"/>
                         <TextBox Text="{Binding ElementName=slValue3, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" TextAlignment="Right" Width="40" />
-                        <Slider Name="slValue3" Orientation="Horizontal" Margin="0, 3, 5, 0" Value="110" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
+                        <Slider Name="slValue3" Orientation="Horizontal" Margin="0, 3, 5, 0" Minimum="0" Maximum="180" TickFrequency="1" IsSnapToTickEnabled="True"
                                 ValueChanged="slValue3_ValueChanged"
                                 Thumb.DragStarted="slValue3_DragStarted"
                                 Thumb.DragCompleted="slValue3_DragCompleted"/>

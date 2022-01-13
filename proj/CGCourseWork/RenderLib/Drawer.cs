@@ -4,21 +4,24 @@ using System.Threading.Tasks;
 using System.Numerics;
 using System.Drawing;
 
-
 namespace RenderLib
 {
+    public enum DrawerMode 
+    { 
+        GL, 
+        CV 
+    }
+
     public class Drawer
     {
-        static object lock_obj;
-
         int width, height;
         public FastBitmap FrameBuffer { get; private set; }
         public float[,] DepthBuffer { get; private set; }
         public float[,] ShadowBuffer { get; private set; }
 
-        Drawer shadow_drawer;
+        DrawerMode mode;
 
-        public Drawer(int width, int height)
+        public Drawer(int width, int height, DrawerMode mode = DrawerMode.CV)
         {
             this.width = width;
             this.height = height;
@@ -26,7 +29,7 @@ namespace RenderLib
             DepthBuffer = new float[width, height];
             ShadowBuffer = new float[width, height];
 
-            lock_obj = new object();
+            this.mode = mode;
         }
 
         public void DrawScene(Scene scene, bool shadows = true)
@@ -34,21 +37,36 @@ namespace RenderLib
             if (shadows)
             {
                 // Создание теневой карты
-                shadow_drawer = new Drawer(width, height);
+                Drawer shadow_drawer = new Drawer(width, height, DrawerMode.GL);
                 Camera light_camera = new Camera(new Pivot(scene.LightSource.Pivot), scene.Camera.ScreenWidth, scene.Camera.ScreenHeight, scene.Camera.ScreenNearDist, scene.Camera.ScreenFarDist);
                 shadow_drawer.DrawScene(new Scene(scene.Terrain, light_camera, scene.LightSource), false);
                 ShadowBuffer = (float[,])shadow_drawer.DepthBuffer.Clone();
             }
 
             var pols = VerticesShading(scene);
-            PixelShading(pols, scene.Camera, scene.LightSource);
+            PixelShading(pols, scene.LightSource);
             ZBufferShadow(pols, scene.Camera, scene.LightSource, shadows);
         }
 
         private List<PolygonInfo> VerticesShading(Scene scene)
         {
-            var matr_move = Matrix4x4.CreateTranslation(scene.Terrain.VisibleTerrainModel.Pivot.Center - scene.Camera.Pivot.Center);
-            var model_view_matr = scene.Terrain.VisibleTerrainModel.ToWorldMatrix * matr_move * scene.Camera.Pivot.LocalCoordsMatrix;
+            Matrix4x4 model_view_matr = new Matrix4x4();
+
+            if (mode == DrawerMode.GL)
+            {
+                Matrix4x4 matr_move = Matrix4x4.CreateTranslation(scene.Terrain.VisibleTerrainModel.Position - scene.Camera.Position);
+                model_view_matr = scene.Terrain.VisibleTerrainModel.ToWorldMatrix * matr_move * scene.Camera.Pivot.LocalCoordsMatrix;
+            }
+            else if (mode == DrawerMode.CV)
+            {
+                Matrix4x4 to_camera = scene.Camera.Pivot.LocalCoordsMatrix;
+
+                to_camera.M41 = scene.Camera.Position.X;
+                to_camera.M42 = scene.Camera.Position.Y;
+                to_camera.M43 = scene.Camera.Position.Z;
+
+                model_view_matr = scene.Terrain.VisibleTerrainModel.ToWorldMatrix * Matrix4x4.CreateTranslation(scene.Terrain.VisibleTerrainModel.Position) * to_camera;
+            }
 
             var vertices = scene.Terrain.VisibleTerrainModel.Vertices.Clone();
             List<PolygonInfo> visible_pols = new List<PolygonInfo>();
@@ -68,48 +86,84 @@ namespace RenderLib
                 light_levels.Add(light_level);
             }
 
-            foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
-            {
-                Vertex[] v_persp = new Vertex[3];
-                for (int i = 0; i < 3; i++)
-                {
-                    v_persp[i] = new Vertex(vertices[pol[i]]);
-                    v_persp[i].Transform(scene.Camera.PerspectiveClip);
-                }
-                    
-                if (scene.Camera.IsVisible(v_persp[0]) && scene.Camera.IsVisible(v_persp[1]) && scene.Camera.IsVisible(v_persp[2]))
-                {
-                    visible_pols.Add(new PolygonInfo((Vertex)vertices[pol[0]].Clone(), (Vertex)vertices[pol[1]].Clone(), (Vertex)vertices[pol[2]].Clone(), 
-                                        scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
 
+            if (mode == DrawerMode.GL)
+            {
+                foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
+                {
+                    Vertex[] v_persp = new Vertex[3];
                     for (int i = 0; i < 3; i++)
                     {
-                        visible_pols[visible_pols.Count - 1].Ws[i] = ws[pol[i]];
-                        visible_pols[visible_pols.Count - 1].LightLevelsOnVertices[i] = light_levels[pol[i]];
+                        v_persp[i] = new Vertex(vertices[pol[i]]);
+                        v_persp[i].Transform(scene.Camera.PerspectiveClip);
                     }
 
-                    visible_pols[visible_pols.Count - 1].Texture = scene.Terrain.VisibleTerrainModel.GetTexture(pol);
+                    if (scene.Camera.IsVisibleGL(v_persp[0]) && scene.Camera.IsVisibleGL(v_persp[1]) && scene.Camera.IsVisibleGL(v_persp[2]))
+                    {
+                        visible_pols.Add(new PolygonInfo((Vertex)vertices[pol[0]].Clone(), (Vertex)vertices[pol[1]].Clone(), (Vertex)vertices[pol[2]].Clone(),
+                                            scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
+
+                        var last_pol = visible_pols[visible_pols.Count - 1];
+                        for (int i = 0; i < 3; i++)
+                        {
+                            last_pol.Ws[i] = ws[pol[i]];
+                            last_pol.LightLevelsOnVertices[i] = light_levels[pol[i]];
+
+                            last_pol.ScreenVertices[i] = new FragmentInfo(last_pol.Vertices[i].Position, last_pol.Ws[i])
+                            {
+                                ScreenPos = scene.Camera.ToScreenProjection(v_persp[i].Position),
+                                TextureCoords = last_pol.Vertices[i].TextureCoords,
+                                Intensity = last_pol.LightLevelsOnVertices[i]
+                            };
+                        }
+
+                        last_pol.Texture = scene.Terrain.VisibleTerrainModel.GetTexture(pol);
+                    }
                 }
             }
+            else if (mode == DrawerMode.CV)
+            {
+                foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
+                {
+                    Vector3[] v_persp = new Vector3[3];
+                    for (int i = 0; i < 3; i++)
+                    {
+                        v_persp[i] = vertices[pol[i]].Position.Transform(scene.Camera.IntrinsicMatrix);
+                        v_persp[i] /= new Vector3(v_persp[i].Z, v_persp[i].Z, 1);
+                    }
+
+                    if (scene.Camera.IsVisibleCV(v_persp[0]) && scene.Camera.IsVisibleCV(v_persp[1]) && scene.Camera.IsVisibleCV(v_persp[2]))
+                    {
+                        visible_pols.Add(new PolygonInfo((Vertex)vertices[pol[0]].Clone(), (Vertex)vertices[pol[1]].Clone(), (Vertex)vertices[pol[2]].Clone(),
+                                            scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
+
+                        var last_pol = visible_pols[visible_pols.Count - 1];
+                        for (int i = 0; i < 3; i++)
+                        {
+                            last_pol.Ws[i] = v_persp[i].Z;
+                            last_pol.LightLevelsOnVertices[i] = light_levels[pol[i]];
+
+                            last_pol.ScreenVertices[i] = new FragmentInfo(last_pol.Vertices[i].Position, last_pol.Ws[i])
+                            {
+                                ScreenPos = new Vector2(v_persp[i].X, v_persp[i].Y),
+                                TextureCoords = last_pol.Vertices[i].TextureCoords,
+                                Intensity = last_pol.LightLevelsOnVertices[i]
+                            };
+                        }
+
+                        last_pol.Texture = scene.Terrain.VisibleTerrainModel.GetTexture(pol);
+                    }
+                }
+            }
+            
 
             return visible_pols;
         }
 
-        private void PixelShading(List<PolygonInfo> pols, Camera cam, Light light)
+        private void PixelShading(List<PolygonInfo> pols, Light light)
         {
             foreach (var pol in pols)
             {
-                for (int i = 0; i < 3; i++)
-                {
-                    var temp = new Vertex(pol.Vertices[i]);
-                    temp.Transform(cam.PerspectiveClip);
-                    pol.ScreenVertices[i] = new FragmentInfo(pol.Vertices[i].Position, pol.Ws[i]);
-
-                    pol.ScreenVertices[i].ScreenPos = cam.ToScreenProjection(temp.Position);
-                    pol.ScreenVertices[i].TextureCoords = pol.Vertices[i].TextureCoords;
-                    pol.ScreenVertices[i].Intensity = pol.LightLevelsOnVertices[i];
-                }
-
                 var first = pol.ScreenVertices[0];
                 var second = pol.ScreenVertices[1];
                 var third = pol.ScreenVertices[2];
@@ -193,7 +247,7 @@ namespace RenderLib
             }
         }
 
-        private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, DirectionalLight light, bool shadows = true)
+        private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, AreaLight light, bool shadows = true)
         {
             // Удаление невидимых линий и поверхностей
             FrameBuffer.Clear();

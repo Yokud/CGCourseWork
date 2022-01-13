@@ -7,9 +7,9 @@ namespace RenderLib
     {
         public Camera Camera { get; private set; }
         public Terrain Terrain { get; private set; }
-        public DirectionalLight LightSource { get; private set; }
+        public AreaLight LightSource { get; private set; }
 
-        public Scene(Terrain terr, Camera cam, DirectionalLight light)
+        public Scene(Terrain terr, Camera cam, AreaLight light)
         {
             Terrain = terr;
             Camera = cam;

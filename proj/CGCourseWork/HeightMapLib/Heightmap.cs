@@ -81,6 +81,35 @@ namespace HeightMapLib
             set => LandGenerator.Seed = value;
         }
 
+        public int Scale
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Scale;
+            }
+        }
+        public int Octaves
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Octaves;
+            }
+        }
+        public float Lacunarity
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Lacunarity;
+            }
+        }
+        public float Persistence
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Persistence;
+            }
+        }
+
         private void GenMap()
         {
             NoiseMap = LandGenerator.GenMap(Width, Height);

@@ -23,12 +23,9 @@ namespace RenderLib
         }
     }
 
-    public class DirectionalLight : Light
+    public class AreaLight : Light
     {
-        private static double fov = Math.PI / 2;
-        private float r, t, tg_fov = (float)Math.Tan(fov / 2);
-
-        public DirectionalLight(Pivot p, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
+        public AreaLight(Pivot p, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
         {
             Pivot = p;
             MaxIntensity = 1f;
@@ -39,9 +36,6 @@ namespace RenderLib
             ScreenHeight = height;
             ScreenNearDist = 0.05f;
             ScreenFarDist = 1e6f;
-
-            t = ScreenNearDist * tg_fov;
-            r = t * ((float)ScreenWidth / ScreenHeight);
         }
 
         public override float MaxIntensity
@@ -77,22 +71,6 @@ namespace RenderLib
         public float ScreenNearDist { get; private set; }
 
         public float ScreenFarDist { get; private set; }
-
-        public Matrix4x4 PerspectiveClip => new Matrix4x4
-        (
-            ScreenNearDist / r, 0, 0, 0,
-            0, ScreenNearDist / t, 0, 0,
-            0, 0, (ScreenFarDist + ScreenNearDist) / (ScreenNearDist - ScreenFarDist), -1f,
-            0, 0, 2 * ScreenNearDist * ScreenFarDist / (ScreenNearDist - ScreenFarDist), 0
-        );
-
-        public Matrix4x4 OrtogonalClip => new Matrix4x4
-        (
-            2f / ScreenWidth, 0, 0, 0,
-            0, 2f / ScreenHeight, 0, 0,
-            0, 0, -1f / (ScreenFarDist - ScreenNearDist), 0,
-            0, 0, 0, 1f
-        );
 
         public override float GetAngleIntensity(Vector3 normal, Vector3 light_dir)
         {

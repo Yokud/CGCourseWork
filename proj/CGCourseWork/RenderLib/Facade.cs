@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using Emgu.CV;
+using System.Numerics;
 
 namespace RenderLib
 {
@@ -16,7 +17,7 @@ namespace RenderLib
         public FastBitmap DrawScene(bool shadows = true)
         {
             Drawer.DrawScene(Scene, shadows);
-            return Drawer.FrameBuffer;
+            return (FastBitmap)Drawer.FrameBuffer.Clone();
         }
 
         public void RotateTerrain(float angle, Axis axis)

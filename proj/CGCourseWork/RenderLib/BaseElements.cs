@@ -343,6 +343,8 @@ namespace RenderLib
 
         public Pivot Pivot { get; protected set; }
 
+        public Vector3 Position => Pivot.Center;
+
         public abstract void Move(float dx, float dy, float dz);
         public abstract void Rotate(float angle, Axis axis);
         public abstract void Scale(float kx, float ky, float kz);
