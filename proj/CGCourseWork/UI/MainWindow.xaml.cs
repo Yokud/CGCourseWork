@@ -262,7 +262,7 @@ namespace UI
         {
             int markersX = 1;
             int markersY = 1;
-            int markersLength = 160;
+            int markersLength = 320;
             int markersSeparation = 10;
             Dictionary ArucoDict = new Dictionary(Dictionary.PredefinedDictionaryName.Dict4X4_100);
             GridBoard ArucoBoard = new GridBoard(markersX, markersY, markersLength, markersSeparation, ArucoDict);
@@ -313,33 +313,28 @@ namespace UI
                         rvec.Push(values);
                         tvecMat.CopyTo(values);
                         tvec.Push(values);
-                        ArucoInvoke.DrawAxis(frame,
-                                                cameraMatrix,
-                                                distortionMatrix,
-                                                rvec,
-                                                tvec,
-                                                markersLength * 0.5f);
+                        //ArucoInvoke.DrawAxis(frame,
+                        //                        cameraMatrix,
+                        //                        distortionMatrix,
+                        //                        rvec,
+                        //                        tvec,
+                        //                        markersLength * 0.5f);
 
                         Matrix4x4 rot = GetRotationMatrixFromRotationVector(rvec).ToMatrix4x4();
-                        
                         Vector4 t = new Vector4((float)tvec[0], (float)tvec[1], (float)tvec[2], 1);
 
-                        //Console.WriteLine("Marker pos: " + t.ToString());
-
-                        //t = Vector4.Transform(t, -rot); // положение камеры относительно маркера
-                        Vector3 pos = new Vector3(t.X, t.Y, t.Z);
-
-                        rot = Matrix4x4.Transpose(rot);
                         Vector3 x_a = new Vector3(rot.M11, rot.M12, rot.M13);
                         Vector3 y_a = new Vector3(rot.M21, rot.M22, rot.M23);
                         Vector3 z_a = new Vector3(rot.M31, rot.M32, rot.M33);
 
-                        fac.SetCamera(pos, x_a, y_a, z_a);
+                        Vector3 pos = new Vector3(t.X, -t.Y, -t.Z);
 
-                        MainFrame.Source = CVAddon.ConcatTwoImages(frame.ToImage<Rgba, byte>().Flip(FlipType.Horizontal).ToBitmap(), fac.DrawScene(false).Bitmap).ToBitmapImage();
+                        fac.SetCamera(pos, x_a, -y_a, -z_a);
+
+                        MainFrame.Source = CVAddon.ConcatTwoImages(frame.ToImage<Rgba, byte>()/*.Flip(FlipType.Horizontal)*/.ToBitmap(), fac.DrawScene().Bitmap).ToBitmapImage();
                     }
                     else
-                        MainFrame.Source = frame.ToImage<Rgba, byte>().Flip(FlipType.Horizontal).ToBitmap().ToBitmapImage();
+                        MainFrame.Source = frame.ToImage<Rgba, byte>()/*.Flip(FlipType.Horizontal)*/.ToBitmap().ToBitmapImage();
      
                     CvInvoke.WaitKey(24);
                 }
@@ -398,39 +393,15 @@ namespace UI
             return concat;
         }
 
-        public static Matrix4x4 ToMatrix4x4(this Affine3d m)
-        {
-            double[] temp = m.GetValues();
-
-            Matrix4x4 matr = new Matrix4x4() { M11 = (float)temp[0], M12 = (float)temp[1], M13 = (float)temp[2], 
-                                               M21 = (float)temp[3], M22 = (float)temp[4], M23 = (float)temp[5], 
-                                               M31 = (float)temp[6], M32 = (float)temp[7], M33 = (float)temp[8], 
-                                               M44 = 1 };
-
-            return matr;
-        }
-
         public static Matrix4x4 ToMatrix4x4(this Mat m)
         {
             double[,] tmp = (double[,])m.GetData();
 
-            double[] temp = new double[tmp.Length];
-
-            int i = 0;
-            foreach (double d in tmp)
-                temp[i++] = d;
-
             Matrix4x4 matr = new Matrix4x4()
             {
-                M11 = (float)temp[0],
-                M12 = (float)temp[1],
-                M13 = (float)temp[2],
-                M21 = (float)temp[3],
-                M22 = (float)temp[4],
-                M23 = (float)temp[5],
-                M31 = (float)temp[6],
-                M32 = (float)temp[7],
-                M33 = (float)temp[8],
+                M11 = (float)tmp[0, 0], M12 = (float)tmp[0, 1], M13 = (float)tmp[0, 2],
+                M21 = (float)tmp[1, 0], M22 = (float)tmp[1, 1], M23 = (float)tmp[1, 2],
+                M31 = (float)tmp[2, 0], M32 = (float)tmp[2, 1], M33 = (float)tmp[2, 2],
                 M44 = 1
             };
 

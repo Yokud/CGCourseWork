@@ -21,6 +21,8 @@ namespace RenderLib
 
         DrawerMode mode;
 
+        readonly Matrix4x4 inverse_matrix = new Matrix4x4(1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1);
+
         public Drawer(int width, int height, DrawerMode mode = DrawerMode.CV)
         {
             this.width = width;
@@ -51,6 +53,7 @@ namespace RenderLib
         private List<PolygonInfo> VerticesShading(Scene scene)
         {
             Matrix4x4 model_view_matr = new Matrix4x4();
+
 
             if (mode == DrawerMode.GL)
             {
@@ -86,76 +89,39 @@ namespace RenderLib
                 light_levels.Add(light_level);
             }
 
+            Matrix4x4 perspective_clip = mode == DrawerMode.GL ? scene.Camera.PerspectiveClip : scene.Camera.PerspectiveClipCV;
 
-            if (mode == DrawerMode.GL)
+            foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
             {
-                foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
+                Vertex[] v_persp = new Vertex[3];
+                for (int i = 0; i < 3; i++)
                 {
-                    Vertex[] v_persp = new Vertex[3];
+                    v_persp[i] = new Vertex(vertices[pol[i]]);
+                    v_persp[i].Transform(perspective_clip);
+                }
+
+                if (scene.Camera.IsVisible(v_persp[0]) && scene.Camera.IsVisible(v_persp[1]) && scene.Camera.IsVisible(v_persp[2]))
+                {
+                    visible_pols.Add(new PolygonInfo((Vertex)vertices[pol[0]].Clone(), (Vertex)vertices[pol[1]].Clone(), (Vertex)vertices[pol[2]].Clone(),
+                                        scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
+
+                    var last_pol = visible_pols[visible_pols.Count - 1];
                     for (int i = 0; i < 3; i++)
                     {
-                        v_persp[i] = new Vertex(vertices[pol[i]]);
-                        v_persp[i].Transform(scene.Camera.PerspectiveClip);
-                    }
+                        last_pol.Ws[i] = ws[pol[i]];
+                        last_pol.LightLevelsOnVertices[i] = light_levels[pol[i]];
 
-                    if (scene.Camera.IsVisibleGL(v_persp[0]) && scene.Camera.IsVisibleGL(v_persp[1]) && scene.Camera.IsVisibleGL(v_persp[2]))
-                    {
-                        visible_pols.Add(new PolygonInfo((Vertex)vertices[pol[0]].Clone(), (Vertex)vertices[pol[1]].Clone(), (Vertex)vertices[pol[2]].Clone(),
-                                            scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
-
-                        var last_pol = visible_pols[visible_pols.Count - 1];
-                        for (int i = 0; i < 3; i++)
+                        last_pol.ScreenVertices[i] = new FragmentInfo(last_pol.Vertices[i].Position, last_pol.Ws[i])
                         {
-                            last_pol.Ws[i] = ws[pol[i]];
-                            last_pol.LightLevelsOnVertices[i] = light_levels[pol[i]];
-
-                            last_pol.ScreenVertices[i] = new FragmentInfo(last_pol.Vertices[i].Position, last_pol.Ws[i])
-                            {
-                                ScreenPos = scene.Camera.ToScreenProjection(v_persp[i].Position),
-                                TextureCoords = last_pol.Vertices[i].TextureCoords,
-                                Intensity = last_pol.LightLevelsOnVertices[i]
-                            };
-                        }
-
-                        last_pol.Texture = scene.Terrain.VisibleTerrainModel.GetTexture(pol);
+                            ScreenPos = scene.Camera.ToScreenSpace(v_persp[i].Position),
+                            TextureCoords = last_pol.Vertices[i].TextureCoords,
+                            Intensity = last_pol.LightLevelsOnVertices[i]
+                        };
                     }
+
+                    last_pol.Texture = scene.Terrain.VisibleTerrainModel.GetTexture(pol);
                 }
             }
-            else if (mode == DrawerMode.CV)
-            {
-                foreach (var pol in scene.Terrain.VisibleTerrainModel.Polygons)
-                {
-                    Vector3[] v_persp = new Vector3[3];
-                    for (int i = 0; i < 3; i++)
-                    {
-                        v_persp[i] = vertices[pol[i]].Position.Transform(scene.Camera.IntrinsicMatrix);
-                        v_persp[i] /= new Vector3(v_persp[i].Z, v_persp[i].Z, 1);
-                    }
-
-                    if (scene.Camera.IsVisibleCV(v_persp[0]) && scene.Camera.IsVisibleCV(v_persp[1]) && scene.Camera.IsVisibleCV(v_persp[2]))
-                    {
-                        visible_pols.Add(new PolygonInfo((Vertex)vertices[pol[0]].Clone(), (Vertex)vertices[pol[1]].Clone(), (Vertex)vertices[pol[2]].Clone(),
-                                            scene.Terrain.VisibleTerrainModel.GetPolNormal(pol).Transform(model_view_matr)));
-
-                        var last_pol = visible_pols[visible_pols.Count - 1];
-                        for (int i = 0; i < 3; i++)
-                        {
-                            last_pol.Ws[i] = v_persp[i].Z;
-                            last_pol.LightLevelsOnVertices[i] = light_levels[pol[i]];
-
-                            last_pol.ScreenVertices[i] = new FragmentInfo(last_pol.Vertices[i].Position, last_pol.Ws[i])
-                            {
-                                ScreenPos = new Vector2(v_persp[i].X, v_persp[i].Y),
-                                TextureCoords = last_pol.Vertices[i].TextureCoords,
-                                Intensity = last_pol.LightLevelsOnVertices[i]
-                            };
-                        }
-
-                        last_pol.Texture = scene.Terrain.VisibleTerrainModel.GetTexture(pol);
-                    }
-                }
-            }
-            
 
             return visible_pols;
         }
@@ -192,7 +158,7 @@ namespace RenderLib
                     if (MathAddon.IsEqual(det, 0))
                         break;
 
-                    // Перспективно-корректное ткстурирование
+                    // Перспективно-корректное текстурирование
                     float w_11 = MathAddon.InBaricentric(bar_p1, 1f / first.W, 1f / second.W, 1f / third.W);
                     float w_12 = MathAddon.InBaricentric(bar_p2, 1f / first.W, 1f / second.W, 1f / third.W);
 
@@ -275,7 +241,7 @@ namespace RenderLib
                         {
                             var pixel_loc = Vector3.Transform(pixel.Position, cam_to_light_matr);
                             var pixel_persp = pixel_loc.Transform(shadow_camera.PerspectiveClip);
-                            var scr_proj = shadow_camera.ToScreenProjection(pixel_persp).ToPoint();
+                            var scr_proj = shadow_camera.ToScreenSpace(pixel_persp).ToPoint();
 
                             if (scr_proj.X < 0 || scr_proj.X >= width || scr_proj.Y < 0 || scr_proj.Y >= height)
                                 pixel.Color = light.GetColorByIntensity(pixel.Color, 0.7f);
@@ -300,7 +266,7 @@ namespace RenderLib
             dx = Math.Abs(dx);
             dy = Math.Abs(dy);
 
-            if ((swap_f = dy > dx))
+            if (swap_f = dy > dx)
                 SystemAddon.Swap(ref dx, ref dy);
 
             int error = 2 * dy - dx;
