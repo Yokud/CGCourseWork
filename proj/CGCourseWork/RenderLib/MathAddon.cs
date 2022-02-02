@@ -9,17 +9,6 @@ namespace RenderLib
     public static class MathAddon
     {
         /// <summary>
-        /// Угол между векторами
-        /// </summary>
-        /// <param name="v1"></param>
-        /// <param name="v2"></param>
-        /// <returns></returns>
-        public static float Angle(Vector3 v1, Vector3 v2)
-        {
-            return (float)Math.Acos(Vector3.Dot(v1, v2) / (v1.Length() * v2.Length()));
-        }
-
-        /// <summary>
         /// Поворот вектора
         /// </summary>
         /// <param name="v"></param>
@@ -98,16 +87,6 @@ namespace RenderLib
             return new Point((int)v.X, (int)v.Y);
         }
 
-        public static int Lepr(int min, int max, float amount)
-        {
-            return MathAddon.RoundToInt(min + (max - min) * amount);
-        }
-
-        public static float Lepr(float min, float max, float amount)
-        {
-            return min + (max - min) * amount;
-        }
-
         public static int RoundToInt(double d)
         {
             return (int)Math.Round(d, MidpointRounding.AwayFromZero);
@@ -118,32 +97,6 @@ namespace RenderLib
             double eps = 1e-6;
 
             return Math.Abs(a - b) < eps;
-        }
-
-        public static int Max3(float a, float b, float c)
-        {
-            float m = a;
-
-            if (m < b)
-                m = b;
-
-            if (m < c)
-                m = c;
-
-            return (int)m;
-        }
-
-        public static int Min3(float a, float b, float c)
-        {
-            float m = a;
-
-            if (m > b)
-                m = b;
-
-            if (m > c)
-                m = c;
-
-            return (int)m;
         }
 
         public static Vector3 Baricentric(Point a, Point b, Point c, Point p, out float det_res)

@@ -59,6 +59,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CVAddon.cs" />
     <Compile Include="SetLimitWindow.xaml.cs">
       <DependentUpon>SetLimitWindow.xaml</DependentUpon>
     </Compile>

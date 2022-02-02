@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -14,7 +11,6 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HeightMapLib;
@@ -25,6 +21,7 @@ using Emgu.CV.Aruco;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using Microsoft.Win32;
 
 namespace UI
 {
@@ -49,6 +46,13 @@ namespace UI
 
         static VideoCapture capture;
         bool captured = false;
+
+        static int markersX = 1;
+        static int markersY = 1;
+        static int markersLength = 320;
+        static int markersSeparation = 10;
+        static Dictionary ArucoDict = new Dictionary(Dictionary.PredefinedDictionaryName.Dict4X4_100);
+        static GridBoard ArucoBoard = new GridBoard(markersX, markersY, markersLength, markersSeparation, ArucoDict);
 
         public MainWindow()
         {
@@ -257,26 +261,42 @@ namespace UI
             }
         }
 
+        private void GetMarker_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+            saveFileDialog1.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Png Image|*.png";
+            saveFileDialog1.Title = "Save an Image File";
+            saveFileDialog1.ShowDialog();
+
+            if (!string.IsNullOrEmpty(saveFileDialog1.FileName) && !string.IsNullOrWhiteSpace(saveFileDialog1.FileName))
+                PrintArucoBoard(ArucoBoard, saveFileDialog1.FileName, markersX, markersY, markersLength, markersSeparation);
+        }
+
+        static void PrintArucoBoard(GridBoard ArucoBoard, string path, int markersX = 1, int markersY = 1, int markersLength = 80, int markersSeparation = 30)
+        {
+            int borderBits = 1;
+
+            System.Drawing.Size imageSize = new System.Drawing.Size();
+            Mat boardImage = new Mat();
+            imageSize.Width = markersX * (markersLength + markersSeparation) - markersSeparation + 2 * markersSeparation;
+            imageSize.Height = markersY * (markersLength + markersSeparation) - markersSeparation + 2 * markersSeparation;
+            ArucoBoard.Draw(imageSize, boardImage, markersSeparation, borderBits);
+
+            var img = boardImage.ToBitmap();
+            img.Save(path);
+        }
 
         void Capturing()
         {
-            int markersX = 1;
-            int markersY = 1;
-            int markersLength = 320;
-            int markersSeparation = 10;
-            Dictionary ArucoDict = new Dictionary(Dictionary.PredefinedDictionaryName.Dict4X4_100);
-            GridBoard ArucoBoard = new GridBoard(markersX, markersY, markersLength, markersSeparation, ArucoDict);
-            //PrintArucoBoard(ArucoBoard, markersX, markersY, markersLength, markersSeparation);
-
             DetectorParameters ArucoParameters = DetectorParameters.GetDefault();
 
             string cameraConfigurationFile = @"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\cameraParameters.xml";
             FileStorage fs = new FileStorage(cameraConfigurationFile, FileStorage.Mode.Read);
+
             if (!fs.IsOpened)
-            {
-                Console.WriteLine("Could not open configuration file " + cameraConfigurationFile);
-                return;
-            }
+                throw new Exception("Could not open configuration file " + cameraConfigurationFile);
+
+
             Mat cameraMatrix = new Mat(new System.Drawing.Size(3, 3), DepthType.Cv32F, 1);
             Mat distortionMatrix = new Mat(1, 8, DepthType.Cv32F, 1);
             fs["cameraMatrix"].ReadMat(cameraMatrix);
@@ -320,7 +340,7 @@ namespace UI
                         //                        tvec,
                         //                        markersLength * 0.5f);
 
-                        Matrix4x4 rot = GetRotationMatrixFromRotationVector(rvec).ToMatrix4x4();
+                        Matrix4x4 rot = GetRotMatFromRotVec(rvec).ToMatrix4x4();
                         Vector4 t = new Vector4((float)tvec[0], (float)tvec[1], (float)tvec[2], 1);
 
                         Vector3 x_a = new Vector3(rot.M11, rot.M12, rot.M13);
@@ -331,81 +351,22 @@ namespace UI
 
                         fac.SetCamera(pos, x_a, -y_a, -z_a);
 
-                        MainFrame.Source = CVAddon.ConcatTwoImages(frame.ToImage<Rgba, byte>()/*.Flip(FlipType.Horizontal)*/.ToBitmap(), fac.DrawScene().Bitmap).ToBitmapImage();
+                        MainFrame.Source = CVAddon.ConcatTwoImages(frame.ToImage<Rgba, byte>().ToBitmap(), fac.DrawScene((bool)WithShadows.IsChecked).Bitmap).ToBitmapImage();
                     }
                     else
-                        MainFrame.Source = frame.ToImage<Rgba, byte>()/*.Flip(FlipType.Horizontal)*/.ToBitmap().ToBitmapImage();
+                        MainFrame.Source = frame.ToImage<Rgba, byte>().ToBitmap().ToBitmapImage();
      
                     CvInvoke.WaitKey(24);
                 }
             }
         }
 
-        static void PrintArucoBoard(GridBoard ArucoBoard, int markersX = 1, int markersY = 1, int markersLength = 80, int markersSeparation = 30)
-        {
-            int borderBits = 1;
-
-            System.Drawing.Size imageSize = new System.Drawing.Size();
-            Mat boardImage = new Mat();
-            imageSize.Width = markersX * (markersLength + markersSeparation) - markersSeparation + 2 * markersSeparation;
-            imageSize.Height = markersY * (markersLength + markersSeparation) - markersSeparation + 2 * markersSeparation;
-            ArucoBoard.Draw(imageSize, boardImage, markersSeparation, borderBits);
-
-            var img = boardImage.ToBitmap();
-            img.Save(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\markers\aruco.png");
-        }
-
-        Mat GetRotationMatrixFromRotationVector(VectorOfDouble rvec)
+        Mat GetRotMatFromRotVec(VectorOfDouble rvec)
         {
             Mat rmat = new Mat();
             CvInvoke.Rodrigues(rvec, rmat);
 
             return rmat;
-        }
-    }
-
-    public static class CVAddon
-    {
-        public static BitmapImage ToBitmapImage(this Bitmap bitmap)
-        {
-            using (var memory = new MemoryStream())
-            {
-                bitmap.Save(memory, ImageFormat.Png);
-                memory.Position = 0;
-
-                var bitmapImage = new BitmapImage();
-                bitmapImage.BeginInit();
-                bitmapImage.StreamSource = memory;
-                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                bitmapImage.EndInit();
-                bitmapImage.Freeze();
-
-                return bitmapImage;
-            }
-        }
-
-        public static Bitmap ConcatTwoImages(Bitmap b1, Bitmap b2)
-        {
-            var concat = new Bitmap(b1);
-            var gr = Graphics.FromImage(concat);
-            gr.DrawImage(b2, 0, 0);
-
-            return concat;
-        }
-
-        public static Matrix4x4 ToMatrix4x4(this Mat m)
-        {
-            double[,] tmp = (double[,])m.GetData();
-
-            Matrix4x4 matr = new Matrix4x4()
-            {
-                M11 = (float)tmp[0, 0], M12 = (float)tmp[0, 1], M13 = (float)tmp[0, 2],
-                M21 = (float)tmp[1, 0], M22 = (float)tmp[1, 1], M23 = (float)tmp[1, 2],
-                M31 = (float)tmp[2, 0], M32 = (float)tmp[2, 1], M33 = (float)tmp[2, 2],
-                M44 = 1
-            };
-
-            return matr;
         }
     }
 }

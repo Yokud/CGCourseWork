@@ -21,8 +21,6 @@ namespace RenderLib
 
         DrawerMode mode;
 
-        readonly Matrix4x4 inverse_matrix = new Matrix4x4(1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1);
-
         public Drawer(int width, int height, DrawerMode mode = DrawerMode.CV)
         {
             this.width = width;
@@ -150,6 +148,7 @@ namespace RenderLib
                     int yi = seg.Key;
                     int x1 = seg.Value.MinX, x2 = seg.Value.MaxX;
 
+                    // Положение пикселя внутри проекции полигона на экран
                     float det;
                     Vector3 bar_p1 = MathAddon.Baricentric(first.ScreenPos.ToPoint(), second.ScreenPos.ToPoint(), third.ScreenPos.ToPoint(), new Point(x1, yi), out det);
                     Vector3 bar_p2 = MathAddon.Baricentric(first.ScreenPos.ToPoint(), second.ScreenPos.ToPoint(), third.ScreenPos.ToPoint(), new Point(x2, yi), out det);
@@ -215,7 +214,7 @@ namespace RenderLib
 
         private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, AreaLight light, bool shadows = true)
         {
-            // Удаление невидимых линий и поверхностей
+            // Очистка буферов
             FrameBuffer.Clear();
             for (int i = 0; i < width; i++)
                 for (int j = 0; j < height; j++)
@@ -348,16 +347,6 @@ namespace RenderLib
             Pixels = new List<FragmentInfo>();
             ScreenVertices = new FragmentInfo[3];
         }
-
-        public PolygonInfo(Vertex[] verts, Vector3 norm)
-        {
-            Vertices = verts;
-            Normal = norm;
-            LightLevelsOnVertices = new float[3];
-            Ws = new float[3];
-            Pixels = new List<FragmentInfo>();
-            ScreenVertices = new FragmentInfo[3];
-        }
     }
 
 
@@ -379,39 +368,12 @@ namespace RenderLib
             W = w;
         }
 
-        public FragmentInfo(float x, float y, float z, float w, int scr_x, int scr_y, float u, float v, Color c)
-        {
-            Position = new Vector3(x, y, z);
-            W = w;
-            ScreenPos = new Vector2(scr_x, scr_y);
-            Color = c;
-            TextureCoords = new Vector2(u, v);
-        }
-
-        public FragmentInfo(float x, float y, float z, float w, int scr_x, int scr_y, Color c, float intensity)
-        {
-            Position = new Vector3(x, y, z);
-            W = w;
-            ScreenPos = new Vector2(scr_x, scr_y);
-            Color = c;
-            Intensity = intensity;
-        }
         public FragmentInfo(float x, float y, float z, float w, int scr_x, int scr_y, Color c)
         {
             Position = new Vector3(x, y, z);
             W = w;
             ScreenPos = new Vector2(scr_x, scr_y);
             Color = c;
-        }
-
-        public FragmentInfo(Vector3 v, float w, Vector2 scr_v, Vector2 tex_coords, Color c, float intensity)
-        {
-            Position = v;
-            W = w;
-            ScreenPos = scr_v;
-            TextureCoords = tex_coords;
-            Color = c;
-            Intensity = intensity;
         }
     }
 }

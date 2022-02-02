@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UI"
         mc:Ignorable="d"
-        Title="CGCourseWork" MinHeight="470" MinWidth="900" WindowStyle="SingleBorderWindow" Height="470.089" Width="835.237" Closing="Window_Closing">
+        Title="CGCourseWork" MinHeight="500" MinWidth="990" WindowStyle="SingleBorderWindow" Height="500" Width="990" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="380*"></ColumnDefinition>
@@ -15,13 +15,10 @@
         <Border Name="Border"
                 BorderThickness="2" 
                 BorderBrush="Black" 
-                Margin="0,5,5,5" 
-                VerticalAlignment="Center" 
-                HorizontalAlignment="Right" 
+                Margin="10,10,5,5" 
                 Background="Gray" 
-                Grid.Column="1" 
                 MinHeight="400" 
-                MinWidth="390">
+                MinWidth="390" Grid.Column="1">
             <Image Name="MainFrame"
                    HorizontalAlignment="Left" 
                    VerticalAlignment="Top" 
@@ -37,45 +34,74 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="0.285*"/>
-                <RowDefinition Height="0.24*"/>
-                <RowDefinition Height="0.235*"/>
-                <RowDefinition Height="0.252*"/>
+                <RowDefinition Height="155*"/>
+                <RowDefinition Height="100*"/>
+                <RowDefinition Height="100*"/>
+                <RowDefinition Height="110*"/>
             </Grid.RowDefinitions>
 
-            <GroupBox Name="HeightmapMenu" Header="Выбор карты высот" Margin="5" MinWidth="75" Grid.Column="0" Grid.Row="0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
+            <Grid Grid.Column="0" Grid.Row="0" Margin="0,0,0,1.6">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
 
-                    <Button Name="Generate"
+                <GroupBox Name="HeightmapMenu" Header="Создание карты высот" Margin="5" MinWidth="75" Grid.Row="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Button Name="Generate"
                             Content="Сгенерировать карту высот" 
-                            Margin="10,25,10,25" 
+                            Margin="17,8,17,6" 
                             Grid.Row="0"
                             MinWidth="90" 
                             MinHeight="26"
                             Height="auto" Width="auto"
-                            Padding="5"
+                            Padding="2.5"
                             Click="Generate_Click"/>
-                </Grid>
-            </GroupBox>
+                    </Grid>
+                </GroupBox>
 
-            <GroupBox Name="Status" Header="Статус карты высот" Margin="5" Grid.Column="1" Grid.Row="0">
+                <GroupBox Name="MarkerMenu" Header="Изображение маркера" Margin="5" MinWidth="75" Grid.Row="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Button Name="GetMarker"
+                            Content="Получить маркер" 
+                            Margin="17,8,17,6"
+                            Grid.Row="0"
+                            MinWidth="90" 
+                            MinHeight="26"
+                            Height="auto" Width="auto"
+                            Padding="2.5"
+                            Click="GetMarker_Click"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+
+
+            <GroupBox Name="Status" Header="Статус карты высот" Margin="5,5,5,4.6" Grid.Column="1" Grid.Row="0">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="0.7*"></RowDefinition>
-                        <RowDefinition Height="0.3*"></RowDefinition>
+                        <RowDefinition Height="0.6*"></RowDefinition>
+                        <RowDefinition Height="0.15*"></RowDefinition>
+                        <RowDefinition Height="0.25*"></RowDefinition>
                     </Grid.RowDefinitions>
 
                     <TextBox Name="StateText" IsReadOnly="True" TextWrapping="WrapWithOverflow" Margin="5" Grid.Row="0">
                         Карта высот ещё не сгенерирована.
                     </TextBox>
-                    <Button Name="CreateLand" Content="Создать модель ландшафта" Margin="12.5, 4.5, 12.5, 0.5" Grid.Row="1" Click="CreateLand_Click"/>
+                    <CheckBox Name="WithShadows" Content="С обработкой теней" IsChecked="True" Grid.Row="1" Margin="10, 2"/>
+
+                    <Button Name="CreateLand" Content="Создать модель ландшафта" Margin="15, 4.5, 15, 0.5" Grid.Row="2" Click="CreateLand_Click"/>
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="ChangeTerrainView" Header="Изменение видимой части" Grid.Column="0" Margin="5" Grid.Row="1" IsEnabled="False">
+            <GroupBox Name="ChangeTerrainView" Header="Изменение видимой части" Grid.Column="0" Margin="5,5.4,5,7.4" Grid.Row="1" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -100,7 +126,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="RotateTerrainView" Header="Поворот" Grid.Column="1" Margin="5" Grid.Row="1" IsEnabled="False">
+            <GroupBox Name="RotateTerrainView" Header="Поворот" Grid.Column="1" Margin="5,5.4,5,7.4" Grid.Row="1" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -116,7 +142,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="ScaleTerrainView" Header="Масштабирование видимой части" Grid.Column="0" Margin="5" Grid.Row="2" Grid.ColumnSpan="2" IsEnabled="False">
+            <GroupBox Name="ScaleTerrainView" Header="Масштабирование видимой части" Grid.Column="0" Margin="5,2.6,5,5.4" Grid.Row="2" Grid.ColumnSpan="2" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -147,7 +173,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="RotateLightSourse" Header="Поворот источника света" Grid.Column="0" Margin="2.5" Grid.Row="3" Grid.ColumnSpan="2" IsEnabled="False">
+            <GroupBox Name="RotateLightSourse" Header="Поворот источника света" Grid.Column="0" Margin="2,2.6,3,1.6" Grid.Row="3" Grid.ColumnSpan="2" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>

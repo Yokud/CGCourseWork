@@ -51,23 +51,17 @@ namespace RenderLib
         public override void Move(float dx, float dy, float dz)
         {
             Pivot.Move(dx, dy, dz);
-
-            OnMoveEvent(dx, dy, dz);
         }
 
         public override void Rotate(float angle, Axis axis)
         {
             Pivot.Rotate(angle, axis);
-
-            OnRotateEvent(angle, axis);
         }
 
         public override void Scale(float kx, float ky, float kz)
         {
             foreach (var v in Vertices)
                 v.Scale(kx, ky, kz);
-
-            OnScaleEvent(kx, ky, kz);
         }
 
         protected void RecalcProcs()

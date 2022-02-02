@@ -15,13 +15,6 @@ namespace RenderLib
 
         Vector3 scale_coefs;
 
-
-        public Terrain(int width, int height, int vis_width, int vis_height, List<Texture> textures) : this(new HeightMap(width, height, 
-                                                                                                        new PerlinNoise(Math.Max(vis_width, vis_height) / 3, 3)), 
-                                                                                                        vis_width, vis_height,
-                                                                                                        textures)
-        { }
-
         public Terrain(HeightMap map, int vis_width, int vis_height, List<Texture> textures)
         {
             this.map = map;
@@ -40,7 +33,6 @@ namespace RenderLib
         }
 
         internal TerrainVisibleSection VisibleTerrainModel => terrain_model;
-
 
         public void Rotate(float angle, Axis axis)
         {

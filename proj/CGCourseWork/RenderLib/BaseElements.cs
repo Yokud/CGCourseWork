@@ -333,14 +333,6 @@ namespace RenderLib
     /// </summary>
     public abstract class Object3D
     {
-        public delegate void RotateHandler(float angle, Axis axis);
-        public delegate void MoveHandler(float dx, float dy, float dz);
-        public delegate void ScaleHandler(float kx, float ky, float kz);
-
-        public event RotateHandler OnRotate;
-        public event MoveHandler OnMove;
-        public event ScaleHandler OnScale;
-
         public Pivot Pivot { get; protected set; }
 
         public Vector3 Position => Pivot.Center;
@@ -348,18 +340,5 @@ namespace RenderLib
         public abstract void Move(float dx, float dy, float dz);
         public abstract void Rotate(float angle, Axis axis);
         public abstract void Scale(float kx, float ky, float kz);
-
-        protected void OnRotateEvent(float angle, Axis axis)
-        {
-            OnRotate?.Invoke(angle, axis);
-        }
-        protected void OnMoveEvent(float dx, float dy, float dz)
-        {
-            OnMove?.Invoke(dx, dy, dz);
-        }
-        protected void OnScaleEvent(float kx, float ky, float kz)
-        {
-            OnScale?.Invoke(kx, ky, kz);
-        }
     }
 }
