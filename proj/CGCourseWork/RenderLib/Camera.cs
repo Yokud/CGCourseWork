@@ -6,8 +6,6 @@ namespace RenderLib
 {
     public class Camera : Object3D
     {
-        static Vector2 max_coords = new Vector2(-1, -1);
-
         public int ScreenWidth { get; private set; }
         public int ScreenHeight { get; private set; }
 
