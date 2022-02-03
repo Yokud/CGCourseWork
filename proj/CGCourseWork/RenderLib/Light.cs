@@ -25,17 +25,12 @@ namespace RenderLib
 
     public class DirectionalLight : Light
     {
-        public DirectionalLight(Pivot p, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
+        public DirectionalLight(Pivot p, Vector3 l_dir, float dif_coef = 1f)
         {
             Pivot = p;
             MaxIntensity = 1f;
             DiffuseCoef = dif_coef;
             LightDirection = l_dir;
-
-            ScreenWidth = width;
-            ScreenHeight = height;
-            ScreenNearDist = 0.05f;
-            ScreenFarDist = 1e6f;
         }
 
         public override float MaxIntensity
@@ -63,14 +58,6 @@ namespace RenderLib
         }
 
         public Vector3 LightDirection { get; private set; }
-
-        public int ScreenWidth { get; private set; }
-
-        public int ScreenHeight { get; private set; }
-
-        public float ScreenNearDist { get; private set; }
-
-        public float ScreenFarDist { get; private set; }
 
         public override float GetAngleIntensity(Vector3 normal, Vector3 light_dir)
         {

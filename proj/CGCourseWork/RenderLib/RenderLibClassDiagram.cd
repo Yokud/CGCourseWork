@@ -109,7 +109,7 @@
   <Class Name="RenderLib.DirectionalLight">
     <Position X="7.75" Y="9.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAMAAAAAAABYAAAAAkBBQAAgAAAAAAAAAACA=</HashCode>
+      <HashCode>AAAAAAAAAIAAAAAAABIAAAAAkBAAAAgAAAAAAAAAACA=</HashCode>
       <FileName>Light.cs</FileName>
     </TypeIdentifier>
   </Class>
