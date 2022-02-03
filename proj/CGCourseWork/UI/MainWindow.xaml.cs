@@ -60,11 +60,13 @@ namespace UI
 
             Center = new Vector3(0, 0, 0);
 
-            textures = new List<Texture>() {new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
-                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
-                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
-                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
-                                                            new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")};
+            textures = new List<Texture>() {
+                new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\water.jpg"),
+                new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\sand.jpg"),
+                new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\grass.jpg"),
+                new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\rock.jpg"),
+                new Texture(@"D:\Repos\GitHub\CGCourseWork\proj\CGCourseWork\textures\snow.jpg")
+            };
 
             ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
             ci.NumberFormat.CurrencyDecimalSeparator = ".";
@@ -238,7 +240,7 @@ namespace UI
 
                 Camera cam = new Camera(Pivot.BasePivot(0, 0, 0), 640, 480, 150, 100000);
 
-                AreaLight light = new AreaLight(Pivot.BasePivot(0, -60, 700), new Vector3(0, 0, -1), width:640, height:480);
+                AreaLight light = new AreaLight(Pivot.BasePivot(0, 10000, 0), new Vector3(0, -1, 0), width:640, height:480);
 
                 Terrain terr = new Terrain(Map, visWidth, visHeight, textures);
 
@@ -264,8 +266,8 @@ namespace UI
         private void GetMarker_Click(object sender, RoutedEventArgs e)
         {
             SaveFileDialog saveFileDialog1 = new SaveFileDialog();
-            saveFileDialog1.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|Png Image|*.png";
-            saveFileDialog1.Title = "Save an Image File";
+            saveFileDialog1.Filter = "Jpeg Image|*.jpg|Bitmap Image|*.bmp|Png Image|*.png";
+            saveFileDialog1.Title = "Сохранение файла с изображением маркера";
             saveFileDialog1.ShowDialog();
 
             if (!string.IsNullOrEmpty(saveFileDialog1.FileName) && !string.IsNullOrWhiteSpace(saveFileDialog1.FileName))
