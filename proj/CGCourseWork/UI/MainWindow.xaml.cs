@@ -240,7 +240,7 @@ namespace UI
 
                 Camera cam = new Camera(Pivot.BasePivot(0, 0, 0), 640, 480, 150, 100000);
 
-                AreaLight light = new AreaLight(Pivot.BasePivot(0, 10000, 0), new Vector3(0, -1, 0), width:640, height:480);
+                DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 10000, 0), new Vector3(0, -1, 0), width:640, height:480);
 
                 Terrain terr = new Terrain(Map, visWidth, visHeight, textures);
 

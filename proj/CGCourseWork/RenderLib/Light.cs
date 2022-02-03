@@ -23,9 +23,9 @@ namespace RenderLib
         }
     }
 
-    public class AreaLight : Light
+    public class DirectionalLight : Light
     {
-        public AreaLight(Pivot p, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
+        public DirectionalLight(Pivot p, Vector3 l_dir, float dif_coef = 1f, int width = 512, int height = 512)
         {
             Pivot = p;
             MaxIntensity = 1f;

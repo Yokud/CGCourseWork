@@ -212,7 +212,7 @@ namespace RenderLib
             }
         }
 
-        private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, AreaLight light, bool shadows = true)
+        private void ZBufferShadow(List<PolygonInfo> pols, Camera cam, DirectionalLight light, bool shadows = true)
         {
             // Очистка буферов
             FrameBuffer.Clear();
