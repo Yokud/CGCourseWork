@@ -39,6 +39,11 @@ namespace RenderLib
                 // Создание теневой карты
                 Drawer shadow_drawer = new Drawer(width, height, DrawerMode.GL);
                 Camera light_camera = new Camera(new Pivot(scene.LightSource.Pivot), scene.Camera.ScreenWidth, scene.Camera.ScreenHeight, scene.Camera.ScreenNearDist, scene.Camera.ScreenFarDist);
+
+                Vector3 temp = light_camera.Pivot.YAxis;
+                light_camera.Pivot.YAxis = light_camera.Pivot.ZAxis;
+                light_camera.Pivot.ZAxis = temp;
+
                 shadow_drawer.DrawScene(new Scene(scene.Terrain, light_camera, scene.LightSource), false);
                 ShadowBuffer = (float[,])shadow_drawer.DepthBuffer.Clone();
             }
@@ -74,13 +79,13 @@ namespace RenderLib
             List<float> ws = new List<float>();
             List<float> light_levels = new List<float>();
 
-            Vector3 light_dir = scene.LightSource.Pivot.ToGlobalCoords(scene.LightSource.LightDirection);
+            Vector3 light_dir = Vector3.Normalize((-scene.LightSource.LightDirection).Transform(scene.LightSource.Pivot.GlobalCoordsMatrix));
 
             foreach (var v in vertices)
             {
-                Vector3 v_norm = scene.Terrain.VisibleTerrainModel.Pivot.ToGlobalCoords(v.Normal);
+                Vector3 v_norm = Vector3.Normalize(v.Normal.Transform(scene.Terrain.VisibleTerrainModel.Pivot.GlobalCoordsMatrix));
 
-                float light_level = scene.LightSource.GetAngleIntensity(Vector3.Normalize(v_norm), Vector3.Normalize(light_dir)); 
+                float light_level = scene.LightSource.GetAngleIntensity(v_norm, light_dir); 
 
                 v.Transform(model_view_matr, out float w);
                 ws.Add(w);
@@ -224,8 +229,20 @@ namespace RenderLib
             Matrix4x4 cam_to_light_matr = Matrix4x4.Identity;
             if (shadows)
             {
-                shadow_camera = new Camera(light.Pivot, cam.ScreenWidth, cam.ScreenHeight, cam.ScreenNearDist, cam.ScreenFarDist);
-                cam_to_light_matr = cam.Pivot.GlobalCoordsMatrix * Matrix4x4.CreateTranslation(cam.Pivot.Center - shadow_camera.Pivot.Center) * shadow_camera.Pivot.LocalCoordsMatrix;
+                shadow_camera = new Camera(new Pivot(light.Pivot), cam.ScreenWidth, cam.ScreenHeight, cam.ScreenNearDist, cam.ScreenFarDist);
+                
+                Vector3 temp = shadow_camera.Pivot.YAxis;
+                shadow_camera.Pivot.YAxis = shadow_camera.Pivot.ZAxis;
+                shadow_camera.Pivot.ZAxis = temp;
+
+                Matrix4x4 from_cv_cam = cam.Pivot.LocalCoordsMatrix;
+                from_cv_cam.M41 = cam.Position.X;
+                from_cv_cam.M42 = cam.Position.Y;
+                from_cv_cam.M43 = cam.Position.Z;
+
+                Matrix4x4.Invert(from_cv_cam, out from_cv_cam);
+
+                cam_to_light_matr = from_cv_cam * Matrix4x4.CreateTranslation(-shadow_camera.Pivot.Center) * shadow_camera.Pivot.LocalCoordsMatrix;
             }
 
             Parallel.ForEach(pols, p => 

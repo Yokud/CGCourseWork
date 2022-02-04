@@ -138,11 +138,8 @@ namespace RenderLib
 
         private void CorrectNormals()
         {
-            Vector3 mult = new Vector3(1, 1, -1);
-
             for (int i = 0; i < Normals.Count; i++)
-                if (Normals[i].Z < 0)
-                    Normals[i] *= mult;
+                Normals[i] *= -1;
 
             RecalcVertexNormals();
         }

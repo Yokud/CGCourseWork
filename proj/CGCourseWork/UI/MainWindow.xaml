@@ -34,13 +34,13 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="155*"/>
-                <RowDefinition Height="100*"/>
+                <RowDefinition Height="151*"/>
+                <RowDefinition Height="105*"/>
                 <RowDefinition Height="100*"/>
                 <RowDefinition Height="110*"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Column="0" Grid.Row="0" Margin="0,0,0,1.6">
+            <Grid Grid.Column="0" Grid.Row="0" Margin="0,0,0,2.2">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -84,7 +84,7 @@
             </Grid>
 
 
-            <GroupBox Name="Status" Header="Статус карты высот" Margin="5,5,5,4.6" Grid.Column="1" Grid.Row="0">
+            <GroupBox Name="Status" Header="Статус карты высот" Margin="5,5,5,5.2" Grid.Column="1" Grid.Row="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.6*"></RowDefinition>
@@ -101,7 +101,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="ChangeTerrainView" Header="Изменение видимой части" Grid.Column="0" Margin="5,5.4,5,7.4" Grid.Row="1" IsEnabled="False">
+            <GroupBox Name="ChangeTerrainView" Header="Изменение видимой части" Grid.Column="0" Margin="5,4.8,5,7" Grid.Row="1" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -126,7 +126,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="RotateTerrainView" Header="Поворот" Grid.Column="1" Margin="5,5.4,5,7.4" Grid.Row="1" IsEnabled="False">
+            <GroupBox Name="RotateTerrainView" Header="Поворот" Grid.Column="1" Margin="5,4.8,5,7" Grid.Row="1" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -142,7 +142,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="ScaleTerrainView" Header="Масштабирование видимой части" Grid.Column="0" Margin="5,2.6,5,5.4" Grid.Row="2" Grid.ColumnSpan="2" IsEnabled="False">
+            <GroupBox Name="ScaleTerrainView" Header="Масштабирование видимой части" Grid.Column="0" Margin="5,3,5,5" Grid.Row="2" Grid.ColumnSpan="2" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.55*"/>
@@ -173,7 +173,7 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Name="RotateLightSourse" Header="Поворот источника света" Grid.Column="0" Margin="2,2.6,3,1.6" Grid.Row="3" Grid.ColumnSpan="2" IsEnabled="False">
+            <GroupBox Name="RotateLightSourse" Header="Поворот источника света" Grid.Column="0" Margin="2,3,3,1.6" Grid.Row="3" Grid.ColumnSpan="2" IsEnabled="False">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>

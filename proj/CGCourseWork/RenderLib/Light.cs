@@ -61,9 +61,9 @@ namespace RenderLib
 
         public override float GetAngleIntensity(Vector3 normal, Vector3 light_dir)
         {
-            float intensity = MaxIntensity * diffuse_coef * Vector3.Dot(normal, light_dir);
+            float intensity = MaxIntensity * diffuse_coef * Math.Max(Vector3.Dot(normal, light_dir), 0f);
 
-            return intensity < 0 ? 0 : intensity;
+            return intensity;
         }
 
         public override void Move(float dx, float dy, float dz)

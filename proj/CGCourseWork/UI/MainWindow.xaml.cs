@@ -22,6 +22,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace UI
 {
@@ -42,7 +43,7 @@ namespace UI
         private bool dragStarted3 = false;
 
         CultureInfo ci;
-
+        string hm_info;
 
         static VideoCapture capture;
         bool captured = false;
@@ -103,7 +104,8 @@ namespace UI
                     pers = mapWindow.Persistence;
 
                 Map = new HeightMap(mapWindow.MapWidth, mapWindow.MapHeight, new PerlinNoise(mapWindow.Scale, octs, lacun, pers, seed));
-                StateText.Text = $"Карта высот была сгенерирована с параметрами: {Map.Width} {Map.Height} {Map.Scale} {Map.Octaves} {Map.Lacunarity} {Map.Persistence} {Map.Seed}";
+                StateText.Text = $"Карта высот была сгенерирована с параметрами:\n- Ширина карты высот: {Map.Width}\n- Высота карты высот: {Map.Height}\n- Масштаб: {Map.Scale}\n- Кол-во октав: {Map.Octaves}\n- Лакунарность: {Map.Lacunarity}\n- Стойкость: {Map.Persistence}\n- Ключ генерации: {Map.Seed}";
+                hm_info = StateText.Text;
             }
     
         }
@@ -235,12 +237,12 @@ namespace UI
             {
                 visWidth = limWindow.VisWidth;
                 visHeight = limWindow.VisHeight;
-                StateText.Text += $" {visWidth} {visHeight}";
+                StateText.Text = hm_info + $"\n- Ширина видимой части: {visWidth}\n- Высота видимой части: {visHeight}";
 
 
                 Camera cam = new Camera(Pivot.BasePivot(0, 0, 0), 640, 480, 150, 100000);
 
-                DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 10000, 0), new Vector3(0, -1, 0));
+                DirectionalLight light = new DirectionalLight(Pivot.BasePivot(0, 700, 0), new Vector3(0, -1, 0));
 
                 Terrain terr = new Terrain(Map, visWidth, visHeight, textures);
 
@@ -353,7 +355,12 @@ namespace UI
 
                         fac.SetCamera(pos, x_a, -y_a, -z_a);
 
-                        MainFrame.Source = CVAddon.ConcatTwoImages(frame.ToImage<Rgba, byte>().ToBitmap(), fac.DrawScene((bool)WithShadows.IsChecked).Bitmap).ToBitmapImage();
+                        //Stopwatch sw = Stopwatch.StartNew();
+                        FastBitmap land_frame = fac.DrawScene((bool)WithShadows.IsChecked);
+                        //sw.Stop();
+                        //Console.WriteLine($"Время рендера (мс) (тени: {(bool)WithShadows.IsChecked}): {sw.ElapsedMilliseconds}");
+
+                        MainFrame.Source = CVAddon.ConcatTwoImages(frame.ToImage<Rgba, byte>().ToBitmap(), land_frame.Bitmap).ToBitmapImage();
                     }
                     else
                         MainFrame.Source = frame.ToImage<Rgba, byte>().ToBitmap().ToBitmapImage();
