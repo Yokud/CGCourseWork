@@ -133,7 +133,7 @@ namespace RenderLib
             RecalcAdjPols();
             RecalcNormals();
             CorrectNormals();
-            SetPolsTextures();
+            SetPolsTextures(scale_coefs.Z);
         }
 
         private void CorrectNormals()
@@ -144,19 +144,19 @@ namespace RenderLib
             RecalcVertexNormals();
         }
 
-        private void SetPolsTextures()
+        private void SetPolsTextures(float kz = 1f)
         {
             foreach (var pol in Polygons)
             {
                 float avg_height = (Vertices[pol[0]].Position.Z + Vertices[pol[1]].Position.Z + Vertices[pol[2]].Position.Z) / 3f;
 
-                if (avg_height < 0.2 * height_coef)
+                if (avg_height < 0.2 * height_coef * kz)
                     pols_texture_types.Add(TextureType.WATER);
-                else if (avg_height < 0.275 * height_coef)
+                else if (avg_height < 0.275 * height_coef * kz)
                     pols_texture_types.Add(TextureType.SAND);
-                else if (avg_height < 0.55 * height_coef)
+                else if (avg_height < 0.55 * height_coef * kz)
                     pols_texture_types.Add(TextureType.GRASS);
-                else if (avg_height < 0.875 * height_coef)
+                else if (avg_height < 0.875 * height_coef * kz)
                     pols_texture_types.Add(TextureType.ROCK);
                 else
                     pols_texture_types.Add(TextureType.SNOW);
