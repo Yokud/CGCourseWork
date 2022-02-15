@@ -5,7 +5,6 @@ using System.Drawing;
 namespace HeightMapLib
 {
     public delegate float NoiseExpresion(float f);
-    public delegate float FilterExpresion(int x, int y);
     public interface ILandGenerator
     {
         int Seed { get; set; }
@@ -22,7 +21,7 @@ namespace HeightMapLib
         int width, height;
         NoiseExpresion expresion;
 
-        private float[,] NoiseMap { get; set; }
+        public float[,] NoiseMap { get; private set; }
         ILandGenerator LandGenerator { get; set; }
 
         public HeightMap(int width, int height, ILandGenerator lg, NoiseExpresion exp = null)
@@ -82,7 +81,36 @@ namespace HeightMapLib
             set => LandGenerator.Seed = value;
         }
 
-        public void GenMap()
+        public int Scale
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Scale;
+            }
+        }
+        public int Octaves
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Octaves;
+            }
+        }
+        public float Lacunarity
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Lacunarity;
+            }
+        }
+        public float Persistence
+        {
+            get
+            {
+                return ((PerlinNoise)LandGenerator).Persistence;
+            }
+        }
+
+        private void GenMap()
         {
             NoiseMap = LandGenerator.GenMap(Width, Height);
 
@@ -156,21 +184,14 @@ namespace HeightMapLib
             return (min, max);
         }
 
-        public void AddFilter(Filter f)
+        public void Normalize()
         {
-            if (width != f.Width || height != f.Height)
-                throw new Exception("Sizes isn't equal");
-
             var (h_min, h_max) = MinMax();
             float delta = h_max - h_min;
 
             for (int i = 0; i < Width; i++)
                 for (int j = 0; j < Height; j++)
                     NoiseMap[i, j] = (NoiseMap[i, j] - h_min) / delta;
-
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
-                    NoiseMap[i, j] *= f.BitMap[i, j];
         }
 
         public void SaveToBmp(string path, string name)
@@ -187,98 +208,6 @@ namespace HeightMapLib
             for (int i = 0; i < width; i++)
                 for (int j = 0; j < height; j++)
                     bmp.SetPixel(i, j, Color.FromArgb(hm[i, j], hm[i, j], hm[i, j]));
-
-            bmp.Save(path + name + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
-        }
-    }
-
-    public class Filter
-    {
-        int width, height;
-
-        public float[,] BitMap { get; private set; }
-
-        public Filter(int width, int height)
-        {
-            Width = width;
-            Height = height;
-            BitMap = new float[Width, Height];
-        }
-
-        public int Width
-        {
-            get
-            {
-                return width;
-            }
-
-            set
-            {
-                if (value > 0)
-                    width = value;
-                else
-                    throw new Exception("Width is positive value");
-            }
-        }
-        public int Height
-        {
-            get
-            {
-                return height;
-            }
-
-            set
-            {
-                if (value > 0)
-                    height = value;
-                else
-                    throw new Exception("Height is positive value");
-            }
-        }
-
-        public void Calculate(FilterExpresion exp)
-        {
-            float min = exp(0, 0), max = min;
-
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
-                {
-                    BitMap[i, j] = exp(i, j);
-                    max = max < BitMap[i, j] ? BitMap[i, j] : max;
-                    min = min > BitMap[i, j] ? BitMap[i, j] : min;
-                }
-
-            float delta = max - min;
-
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
-                    BitMap[i, j] = (BitMap[i, j] - min) / delta;
-        }
-
-        public void Load(string fullpath)
-        {
-            Bitmap bmp = (Bitmap)Image.FromFile(fullpath);
-
-            for (int i = 0; i < bmp.Width; i++)
-                for (int j = 0; j < bmp.Height; j++)
-                {
-                    if (bmp.GetPixel(i, j).R == bmp.GetPixel(i, j).G && bmp.GetPixel(i, j).G == bmp.GetPixel(i, j).B)
-                        BitMap[i, j] = bmp.GetPixel(i, j).R / 255f;
-                    else
-                        throw new Exception("Image must be grayscaled");
-                }
-        }
-
-        public void SaveBmp(string path, string name)
-        {
-            Bitmap bmp = new Bitmap(width, height);
-
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
-                {
-                    byte val = (byte)(BitMap[i, j] * 255);
-                    bmp.SetPixel(i, j, Color.FromArgb(val, val, val));
-                }
 
             bmp.Save(path + name + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
         }
@@ -368,7 +297,7 @@ namespace HeightMapLib
             }
         }
 
-        public PerlinNoise(int scale, int octaves = 1, float lacunarity = 2, float persistence = 0.5f, int seed = -1)
+        public PerlinNoise(int scale, int octaves = 1, float lacunarity = 2f, float persistence = 0.5f, int seed = -1)
         {
             Scale = scale;
             Octaves = octaves;
